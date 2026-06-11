@@ -1,0 +1,72 @@
+/*
+© 2025 Sharon Aicler (saichler@gmail.com)
+
+Layer 8 Ecosystem is licensed under the Apache License, Version 2.0.
+You may obtain a copy of the License at:
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+syntax = "proto3";
+
+package vend;
+
+option go_package = "./types/vend";
+
+import "vend-common.proto";
+import "l8common.proto";
+import "api.proto";
+
+// ============================================================================
+// PAYMENT AND CASH MANAGEMENT MESSAGES
+// ============================================================================
+
+// @PrimeObject
+// VendCashPosition represents the current cash state of a vending machine
+message VendCashPosition {
+  string position_id = 1;
+  string machine_id = 2;
+  int64 timestamp = 3;
+  l8common.Money coin_tube_total = 4;
+  l8common.Money coin_box_total = 5;
+  l8common.Money bill_stacker_total = 6;
+  int32 bill_stacker_count = 7;
+  int32 bill_stacker_capacity = 8;
+  l8common.Money total_cash = 9;
+  bool change_available = 10;
+  bool exact_change_required = 11;
+  int64 last_collection_date = 12;
+  map<string, string> custom_fields = 13;
+  l8common.AuditInfo audit_info = 14;
+}
+
+message VendCashPositionList {
+  repeated VendCashPosition list = 1;
+  l8api.L8MetaData metadata = 2;
+}
+
+// @PrimeObject
+// VendCashCollection represents a cash collection event from a vending machine
+message VendCashCollection {
+  string collection_id = 1;
+  string machine_id = 2;
+  int64 collection_date = 3;
+  string collector_id = 4;
+  l8common.Money coins_collected = 5;
+  l8common.Money bills_collected = 6;
+  l8common.Money total_collected = 7;
+  string route_id = 8;
+  string notes = 9;
+  map<string, string> custom_fields = 10;
+  l8common.AuditInfo audit_info = 11;
+}
+
+message VendCashCollectionList {
+  repeated VendCashCollection list = 1;
+  l8api.L8MetaData metadata = 2;
+}

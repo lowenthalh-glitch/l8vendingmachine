@@ -1,0 +1,116 @@
+/*
+© 2025 Sharon Aicler (saichler@gmail.com)
+
+Layer 8 Ecosystem is licensed under the Apache License, Version 2.0.
+You may obtain a copy of the License at:
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+syntax = "proto3";
+
+package vend;
+
+option go_package = "./types/vend";
+
+import "vend-common.proto";
+import "l8common.proto";
+import "api.proto";
+
+// ============================================================================
+// INVENTORY MANAGEMENT MESSAGES
+// ============================================================================
+
+// @PrimeObject
+// VendProduct represents a product that can be sold in vending machines
+message VendProduct {
+  string product_id = 1;
+  string name = 2;
+  VendProductCategory category = 3;
+  l8common.Money price = 4;
+  string upc = 5;
+  string supplier_id = 6;
+  int32 shelf_life_days = 7;
+  bool is_active = 8;
+  string image_url = 9;
+  string description = 10;
+  map<string, string> custom_fields = 11;
+  l8common.AuditInfo audit_info = 12;
+}
+
+message VendProductList {
+  repeated VendProduct list = 1;
+  l8api.L8MetaData metadata = 2;
+}
+
+// @PrimeObject
+// VendPlanogram represents the slot layout and product assignment for a machine
+message VendPlanogram {
+  string planogram_id = 1;
+  string machine_id = 2;
+  string name = 3;
+  bool is_active = 4;
+  int64 effective_date = 5;
+  repeated VendSlotAssignment slots = 6;
+  map<string, string> custom_fields = 7;
+  l8common.AuditInfo audit_info = 8;
+}
+
+message VendPlanogramList {
+  repeated VendPlanogram list = 1;
+  l8api.L8MetaData metadata = 2;
+}
+
+// VendSlotAssignment is a child type embedded in VendPlanogram
+message VendSlotAssignment {
+  string slot_id = 1;
+  string row = 2;
+  int32 col_number = 3;
+  string product_id = 4;
+  int32 capacity = 5;
+  int32 par_level = 6;
+  int32 current_quantity = 7;
+  VendSlotStatus status = 8;
+  VendSlotMechanism mechanism = 9;
+  l8common.Money price = 10;
+  string motor_status = 11;
+  string lock_status = 12;
+  int64 last_vend_time = 13;
+  int32 vend_count = 14;
+  int64 sold_out_since = 15;
+  int64 expiration_date = 16;
+}
+
+// @PrimeObject
+// VendRestockOrder represents an order to restock a vending machine
+message VendRestockOrder {
+  string order_id = 1;
+  string machine_id = 2;
+  string route_id = 3;
+  VendWorkOrderStatus status = 4;
+  int64 created_date = 5;
+  int64 due_date = 6;
+  string urgency = 7;
+  repeated VendRestockLine lines = 8;
+  string notes = 9;
+  map<string, string> custom_fields = 10;
+  l8common.AuditInfo audit_info = 11;
+}
+
+message VendRestockOrderList {
+  repeated VendRestockOrder list = 1;
+  l8api.L8MetaData metadata = 2;
+}
+
+// VendRestockLine is a child type embedded in VendRestockOrder
+message VendRestockLine {
+  string slot_id = 1;
+  string product_id = 2;
+  int32 quantity_needed = 3;
+  int32 quantity_loaded = 4;
+}

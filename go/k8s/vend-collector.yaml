@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: vend-collector
+  labels:
+    name: vend-collector
+
+---
+
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  namespace: vend-collector
+  name: vend-collector
+  labels:
+    app: vend-collector
+spec:
+  selector:
+    matchLabels:
+      app: vend-collector
+  template:
+    metadata:
+      labels:
+        app: vend-collector
+    spec:
+      containers:
+        - name: vend-collector
+          image: saichler/vendmachine-collector:latest
+          imagePullPolicy: Always
+          env:
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+          volumeMounts:
+            - name: hdata
+              mountPath: /data
+      volumes:
+        - name: hdata
+          hostPath:
+            path: /data
+            type: DirectoryOrCreate

@@ -1,0 +1,166 @@
+<div class="section-container inventory-section l8-section">
+    <!-- Inventory Hero Header -->
+    <div class="l8-header-frame parallax-container">
+        <div class="l8-header-bg parallax-layer" data-speed="0.5">
+            <svg class="l8-illustration" viewBox="0 0 1200 300" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="vendInvGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#0ea5e9;stop-opacity:0.4" />
+                        <stop offset="100%" style="stop-color:#0284c7;stop-opacity:0.2" />
+                    </linearGradient>
+                    <linearGradient id="vendInvGrad2" x1="0%" y1="100%" x2="100%" y2="0%">
+                        <stop offset="0%" style="stop-color:#38bdf8;stop-opacity:0.3" />
+                        <stop offset="100%" style="stop-color:#0ea5e9;stop-opacity:0.15" />
+                    </linearGradient>
+                    <filter id="vendInvGlow">
+                        <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                        <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                    </filter>
+                </defs>
+
+                <!-- Grid Background -->
+                <g opacity="0.08">
+                    <line x1="0" y1="60" x2="1200" y2="60" stroke="#0ea5e9" stroke-width="0.5"/>
+                    <line x1="0" y1="120" x2="1200" y2="120" stroke="#0ea5e9" stroke-width="0.5"/>
+                    <line x1="0" y1="180" x2="1200" y2="180" stroke="#0ea5e9" stroke-width="0.5"/>
+                    <line x1="0" y1="240" x2="1200" y2="240" stroke="#0ea5e9" stroke-width="0.5"/>
+                    <line x1="240" y1="0" x2="240" y2="300" stroke="#0ea5e9" stroke-width="0.5"/>
+                    <line x1="480" y1="0" x2="480" y2="300" stroke="#0ea5e9" stroke-width="0.5"/>
+                    <line x1="720" y1="0" x2="720" y2="300" stroke="#0ea5e9" stroke-width="0.5"/>
+                    <line x1="960" y1="0" x2="960" y2="300" stroke="#0ea5e9" stroke-width="0.5"/>
+                </g>
+
+                <!-- Vending Machine Left -->
+                <g class="server-rack-animation">
+                    <rect x="100" y="70" width="90" height="160" rx="6" fill="url(#vendInvGrad1)" filter="url(#vendInvGlow)"/>
+                    <rect x="110" y="82" width="70" height="55" rx="3" fill="#0ea5e9" opacity="0.15"/>
+                    <rect x="115" y="88" width="28" height="18" rx="2" fill="#0ea5e9" opacity="0.4"/>
+                    <rect x="148" y="88" width="28" height="18" rx="2" fill="#0ea5e9" opacity="0.35"/>
+                    <rect x="115" y="110" width="28" height="18" rx="2" fill="#0ea5e9" opacity="0.3"/>
+                    <rect x="148" y="110" width="28" height="18" rx="2" fill="#0ea5e9" opacity="0.45"/>
+                    <rect x="110" y="145" width="70" height="30" rx="3" fill="#0ea5e9" opacity="0.2"/>
+                    <circle cx="145" cy="160" r="8" fill="#0ea5e9" opacity="0.3"/>
+                    <rect x="120" y="185" width="50" height="8" rx="2" fill="#0ea5e9" opacity="0.25"/>
+                    <circle cx="115" cy="200" r="3" fill="#00ff41">
+                        <animate attributeName="opacity" values="0.3;1;0.3" dur="1.5s" repeatCount="indefinite"/>
+                    </circle>
+                    <circle cx="175" cy="200" r="3" fill="#00ff41">
+                        <animate attributeName="opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite"/>
+                    </circle>
+                </g>
+
+                <!-- Central Cloud/Management -->
+                <g class="storage-animation">
+                    <ellipse cx="600" cy="120" rx="100" ry="50" fill="url(#vendInvGrad2)" opacity="0.5"/>
+                    <ellipse cx="600" cy="110" rx="80" ry="35" fill="url(#vendInvGrad1)" opacity="0.4"/>
+                    <ellipse cx="600" cy="105" rx="55" ry="22" fill="#0ea5e9" opacity="0.2"/>
+                    <text x="600" y="115" text-anchor="middle" fill="#0ea5e9" font-size="14" opacity="0.6" font-family="monospace">NAYAX</text>
+                    <!-- Signal waves -->
+                    <circle cx="600" cy="170" r="15" fill="none" stroke="#38bdf8" stroke-width="1" opacity="0.3">
+                        <animate attributeName="r" values="15;40;15" dur="3s" repeatCount="indefinite"/>
+                        <animate attributeName="opacity" values="0.4;0;0.4" dur="3s" repeatCount="indefinite"/>
+                    </circle>
+                    <circle cx="600" cy="170" r="10" fill="none" stroke="#38bdf8" stroke-width="1" opacity="0.4">
+                        <animate attributeName="r" values="10;30;10" dur="2.5s" repeatCount="indefinite"/>
+                        <animate attributeName="opacity" values="0.5;0;0.5" dur="2.5s" repeatCount="indefinite"/>
+                    </circle>
+                </g>
+
+                <!-- Vending Machine Right -->
+                <g class="server-rack-animation">
+                    <rect x="1010" y="70" width="90" height="160" rx="6" fill="url(#vendInvGrad1)" filter="url(#vendInvGlow)"/>
+                    <rect x="1020" y="82" width="70" height="55" rx="3" fill="#0ea5e9" opacity="0.15"/>
+                    <rect x="1025" y="88" width="28" height="18" rx="2" fill="#0ea5e9" opacity="0.35"/>
+                    <rect x="1058" y="88" width="28" height="18" rx="2" fill="#0ea5e9" opacity="0.4"/>
+                    <rect x="1025" y="110" width="28" height="18" rx="2" fill="#0ea5e9" opacity="0.45"/>
+                    <rect x="1058" y="110" width="28" height="18" rx="2" fill="#0ea5e9" opacity="0.3"/>
+                    <rect x="1020" y="145" width="70" height="30" rx="3" fill="#0ea5e9" opacity="0.2"/>
+                    <circle cx="1055" cy="160" r="8" fill="#0ea5e9" opacity="0.3"/>
+                    <rect x="1030" y="185" width="50" height="8" rx="2" fill="#0ea5e9" opacity="0.25"/>
+                    <circle cx="1025" cy="200" r="3" fill="#00ff41">
+                        <animate attributeName="opacity" values="0.4;1;0.4" dur="1.8s" repeatCount="indefinite"/>
+                    </circle>
+                    <circle cx="1085" cy="200" r="3" fill="#f59e0b">
+                        <animate attributeName="opacity" values="0.3;1;0.3" dur="2.2s" repeatCount="indefinite"/>
+                    </circle>
+                </g>
+
+                <!-- Vending Machine Center-Left -->
+                <g>
+                    <rect x="350" y="160" width="60" height="100" rx="4" fill="url(#vendInvGrad2)" opacity="0.5"/>
+                    <rect x="356" y="168" width="48" height="35" rx="2" fill="#0ea5e9" opacity="0.15"/>
+                    <rect x="360" y="210" width="40" height="15" rx="2" fill="#0ea5e9" opacity="0.2"/>
+                    <circle cx="380" cy="245" r="3" fill="#00ff41" opacity="0.6"/>
+                </g>
+
+                <!-- Vending Machine Center-Right -->
+                <g>
+                    <rect x="790" y="160" width="60" height="100" rx="4" fill="url(#vendInvGrad2)" opacity="0.5"/>
+                    <rect x="796" y="168" width="48" height="35" rx="2" fill="#0ea5e9" opacity="0.15"/>
+                    <rect x="800" y="210" width="40" height="15" rx="2" fill="#0ea5e9" opacity="0.2"/>
+                    <circle cx="820" cy="245" r="3" fill="#ef4444" opacity="0.6">
+                        <animate attributeName="opacity" values="0.4;1;0.4" dur="1s" repeatCount="indefinite"/>
+                    </circle>
+                </g>
+
+                <!-- Connection Lines -->
+                <g opacity="0.35">
+                    <line x1="190" y1="150" x2="550" y2="140" stroke="#0ea5e9" stroke-width="1.5" stroke-dasharray="6,4">
+                        <animate attributeName="stroke-dashoffset" values="0;10" dur="1s" repeatCount="indefinite"/>
+                    </line>
+                    <line x1="650" y1="140" x2="1010" y2="150" stroke="#0ea5e9" stroke-width="1.5" stroke-dasharray="6,4">
+                        <animate attributeName="stroke-dashoffset" values="0;10" dur="1s" repeatCount="indefinite"/>
+                    </line>
+                    <line x1="380" y1="160" x2="560" y2="135" stroke="#38bdf8" stroke-width="1" stroke-dasharray="4,4" opacity="0.6">
+                        <animate attributeName="stroke-dashoffset" values="0;8" dur="1.2s" repeatCount="indefinite"/>
+                    </line>
+                    <line x1="640" y1="135" x2="820" y2="160" stroke="#38bdf8" stroke-width="1" stroke-dasharray="4,4" opacity="0.6">
+                        <animate attributeName="stroke-dashoffset" values="0;8" dur="1.2s" repeatCount="indefinite"/>
+                    </line>
+                </g>
+
+                <!-- Data Particles -->
+                <circle r="3" fill="#38bdf8" opacity="0.7">
+                    <animate attributeName="cx" values="190;550" dur="2.5s" repeatCount="indefinite"/>
+                    <animate attributeName="cy" values="150;140" dur="2.5s" repeatCount="indefinite"/>
+                    <animate attributeName="opacity" values="0;0.8;0" dur="2.5s" repeatCount="indefinite"/>
+                </circle>
+                <circle r="3" fill="#38bdf8" opacity="0.7">
+                    <animate attributeName="cx" values="650;1010" dur="3s" repeatCount="indefinite"/>
+                    <animate attributeName="cy" values="140;150" dur="3s" repeatCount="indefinite"/>
+                    <animate attributeName="opacity" values="0;0.8;0" dur="3s" repeatCount="indefinite"/>
+                </circle>
+            </svg>
+        </div>
+
+        <!-- Header Content Layer -->
+        <div class="l8-header-content parallax-layer" data-speed="1">
+            <div class="l8-header-title">
+                <div class="l8-icon">
+                    <svg width="50" height="50" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="8" y="5" width="34" height="40" rx="4" fill="none" stroke="#0ea5e9" stroke-width="2"/>
+                        <rect x="13" y="10" width="24" height="12" rx="2" fill="#0ea5e9" opacity="0.4"/>
+                        <rect x="15" y="13" width="9" height="6" rx="1" fill="#0ea5e9" opacity="0.6"/>
+                        <rect x="26" y="13" width="9" height="6" rx="1" fill="#0ea5e9" opacity="0.5"/>
+                        <rect x="13" y="26" width="24" height="8" rx="2" fill="#0ea5e9" opacity="0.3"/>
+                        <circle cx="25" cy="30" r="2.5" fill="#0ea5e9" opacity="0.4"/>
+                        <rect x="18" y="38" width="14" height="3" rx="1" fill="#0ea5e9" opacity="0.25"/>
+                        <circle cx="14" cy="40" r="1.5" fill="#00ff41"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="l8-title">Inventory</h1>
+                    <p class="l8-subtitle">Manage Vending Machine Targets and Collection</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-content" style="flex: 1; display: flex; flex-direction: column; min-height: 0;">
+        <div style="padding: 0; flex: 1; min-height: 0; margin-left: -7px; width: calc(100% + 7px);">
+            <iframe id="targets-iframe" src="l8ui/targets/index.html"
+                    style="width: 100%; height: 100%; border: none; display: block;"
+                    title="Inventory Management"></iframe>
+        </div>
+    </div>
+</div>

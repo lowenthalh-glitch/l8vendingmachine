@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: vend-parser
+  labels:
+    name: vend-parser
+
+---
+
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  namespace: vend-parser
+  name: vend-parser
+  labels:
+    app: vend-parser
+spec:
+  selector:
+    matchLabels:
+      app: vend-parser
+  template:
+    metadata:
+      labels:
+        app: vend-parser
+    spec:
+      containers:
+        - name: vend-parser
+          image: saichler/vendmachine-parser:latest
+          imagePullPolicy: Always
+          env:
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+          volumeMounts:
+            - name: hdata
+              mountPath: /data
+      volumes:
+        - name: hdata
+          hostPath:
+            path: /data
+            type: DirectoryOrCreate

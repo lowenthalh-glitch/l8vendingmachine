@@ -1,0 +1,95 @@
+/*
+© 2025 Sharon Aicler (saichler@gmail.com)
+
+Layer 8 Ecosystem is licensed under the Apache License, Version 2.0.
+You may obtain a copy of the License at:
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+syntax = "proto3";
+
+package vend;
+
+option go_package = "./types/vend";
+
+import "vend-common.proto";
+import "l8common.proto";
+import "api.proto";
+
+// @PrimeObject
+message VendAlert {
+    string alert_id = 1;
+    string machine_id = 2;               // cross-ref: VendMachine
+    int64 timestamp = 3;
+    VendAlertSeverity severity = 4;
+    VendAlertCategory category = 5;
+    string code = 6;
+    string description = 7;
+    double current_value = 8;
+    double threshold_value = 9;
+    VendAlertStatus status = 10;
+    string acknowledged_by = 11;
+    int64 acknowledged_at = 12;
+    int64 resolved_at = 13;
+    string slot_id = 14;
+    map<string, string> custom_fields = 15;
+    l8common.AuditInfo audit_info = 16;
+}
+
+message VendAlertList {
+    repeated VendAlert list = 1;
+    l8api.L8MetaData metadata = 2;
+}
+
+// @PrimeObject
+message VendWorkOrder {
+    string work_order_id = 1;
+    string machine_id = 2;               // cross-ref: VendMachine
+    string alert_id = 3;                 // cross-ref: VendAlert
+    string work_type = 4;
+    string priority = 5;
+    VendWorkOrderStatus status = 6;
+    string assigned_driver_id = 7;       // cross-ref: VendDriver
+    string description = 8;
+    int32 estimated_duration = 9;
+    int32 actual_duration = 10;
+    int64 scheduled_date = 11;
+    int64 completed_date = 12;
+    string parts_needed = 13;
+    string notes = 14;
+    map<string, string> custom_fields = 15;
+    l8common.AuditInfo audit_info = 16;
+}
+
+message VendWorkOrderList {
+    repeated VendWorkOrder list = 1;
+    l8api.L8MetaData metadata = 2;
+}
+
+// @PrimeObject
+message VendServiceVisit {
+    string visit_id = 1;
+    string machine_id = 2;               // cross-ref: VendMachine
+    string driver_id = 3;                // cross-ref: VendDriver
+    int64 arrival_time = 4;
+    int64 departure_time = 5;
+    int32 duration = 6;
+    repeated string activities = 7;
+    int32 slots_restocked = 8;
+    bool cash_collected = 9;
+    string parts_replaced = 10;
+    string notes = 11;
+    map<string, string> custom_fields = 12;
+    l8common.AuditInfo audit_info = 13;
+}
+
+message VendServiceVisitList {
+    repeated VendServiceVisit list = 1;
+    l8api.L8MetaData metadata = 2;
+}

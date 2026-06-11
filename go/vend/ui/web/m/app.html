@@ -1,0 +1,177 @@
+<!--
+© 2025 Sharon Aicler (saichler@gmail.com)
+Layer 8 Ecosystem is licensed under the Apache License, Version 2.0.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <title>L8 Vending Mobile</title>
+
+    <!-- CSS: Theme -->
+    <link rel="stylesheet" href="../l8ui/shared/layer8d-theme.css">
+
+    <!-- CSS: Mobile Components -->
+    <link rel="stylesheet" href="../l8ui/m/css/layer8m-popup.css">
+    <link rel="stylesheet" href="../l8ui/m/css/layer8m-confirm.css">
+    <link rel="stylesheet" href="../l8ui/m/css/layer8m-table.css">
+    <link rel="stylesheet" href="../l8ui/m/css/layer8m-edit-table.css">
+    <link rel="stylesheet" href="../l8ui/m/css/layer8m-forms.css">
+    <link rel="stylesheet" href="../l8ui/m/css/layer8m-datepicker.css">
+    <link rel="stylesheet" href="../l8ui/m/css/layer8m-reference-picker.css">
+    <link rel="stylesheet" href="../l8ui/m/css/layer8m-nav-cards.css">
+
+    <!-- CSS: View System -->
+    <link rel="stylesheet" href="../l8ui/shared/layer8-view-switcher.css">
+    <link rel="stylesheet" href="../l8ui/chart/layer8d-chart.css">
+    <link rel="stylesheet" href="../l8ui/kanban/layer8d-kanban.css">
+    <link rel="stylesheet" href="../l8ui/timeline/layer8d-timeline.css">
+    <link rel="stylesheet" href="../l8ui/calendar/layer8d-calendar.css">
+    <link rel="stylesheet" href="../l8ui/gantt/layer8d-gantt.css">
+
+    <!-- CSS: AI Agent -->
+    <link rel="stylesheet" href="../l8ui/l8agent/l8agent-chat.css">
+</head>
+<body>
+    <div id="app-container">
+        <div id="mobile-header"></div>
+        <div id="mobile-content"></div>
+        <div id="mobile-nav"></div>
+    </div>
+
+    <!-- JS: Mobile Core -->
+    <script src="../l8ui/m/js/layer8m-config.js"></script>
+    <script src="../l8ui/m/js/layer8m-auth.js"></script>
+    <script src="../l8ui/m/js/layer8m-utils.js"></script>
+
+    <!-- JS: Shared Desktop Utilities -->
+    <script src="../l8ui/shared/layer8d-config.js"></script>
+    <script src="../l8ui/shared/layer8d-utils.js"></script>
+    <script src="../l8ui/shared/layer8d-renderers.js"></script>
+    <script src="../l8ui/shared/layer8d-reference-registry.js"></script>
+
+    <!-- JS: Factory Components -->
+    <script src="../l8ui/shared/layer8-enum-factory.js"></script>
+    <script src="../l8ui/shared/layer8-ref-factory.js"></script>
+    <script src="../l8ui/shared/layer8-column-factory.js"></script>
+    <script src="../l8ui/shared/layer8-form-factory.js"></script>
+
+    <!-- JS: Mobile Module Registry -->
+    <script src="../l8ui/m/js/layer8m-module-registry.js"></script>
+
+    <!-- JS: Mobile Components -->
+    <script src="../l8ui/m/js/layer8m-popup.js"></script>
+    <script src="../l8ui/m/js/layer8m-confirm.js"></script>
+    <script src="../l8ui/m/js/layer8m-table.js"></script>
+    <script src="../l8ui/m/js/layer8m-edit-table.js"></script>
+    <script src="../l8ui/m/js/layer8m-forms-fields.js"></script>
+    <script src="../l8ui/m/js/layer8m-forms-fields-ext.js"></script>
+    <script src="../l8ui/m/js/layer8m-forms-fields-reference.js"></script>
+    <script src="../l8ui/m/js/layer8m-forms.js"></script>
+    <script src="../l8ui/m/js/layer8m-forms-inline.js"></script>
+    <script src="../l8ui/m/js/layer8m-datepicker.js"></script>
+    <script src="../l8ui/m/js/layer8m-reference-registry.js"></script>
+
+    <!-- JS: Mobile Reference Registry -->
+    <script src="js/layer8m-reference-registry-vend.js"></script>
+
+    <script src="../l8ui/m/js/layer8m-reference-picker.js"></script>
+    <script src="../l8ui/m/js/layer8m-renderers.js"></script>
+    <script src="../l8ui/m/js/layer8m-data-source.js"></script>
+
+    <!-- JS: Shared Utilities -->
+    <script src="../l8ui/shared/layer8-markdown.js"></script>
+    <script src="../l8ui/shared/layer8-file-upload.js"></script>
+    <script src="../l8ui/shared/layer8-csv-export.js"></script>
+
+    <!-- JS: Module Data - Fleet -->
+    <script src="js/fleet/fleet-enums.js"></script>
+    <script src="js/fleet/fleet-columns.js"></script>
+    <script src="js/fleet/fleet-forms.js"></script>
+    <script src="js/fleet/fleet-index.js"></script>
+
+    <!-- JS: Module Data - Inventory -->
+    <script src="js/inventory/inventory-enums.js"></script>
+    <script src="js/inventory/inventory-columns.js"></script>
+    <script src="js/inventory/inventory-forms.js"></script>
+    <script src="js/inventory/inventory-index.js"></script>
+
+    <!-- JS: Module Data - Sales -->
+    <script src="js/sales/sales-enums.js"></script>
+    <script src="js/sales/sales-columns.js"></script>
+    <script src="js/sales/sales-forms.js"></script>
+    <script src="js/sales/sales-index.js"></script>
+
+    <!-- JS: Module Data - Maintenance -->
+    <script src="js/maintenance/maintenance-enums.js"></script>
+    <script src="js/maintenance/maintenance-columns.js"></script>
+    <script src="js/maintenance/maintenance-forms.js"></script>
+    <script src="js/maintenance/maintenance-index.js"></script>
+
+    <!-- JS: Module Data - Routes -->
+    <script src="js/routes/routes-enums.js"></script>
+    <script src="js/routes/routes-columns.js"></script>
+    <script src="js/routes/routes-forms.js"></script>
+    <script src="js/routes/routes-index.js"></script>
+
+    <!-- JS: Module Data - Analytics -->
+    <script src="js/analytics/analytics-enums.js"></script>
+    <script src="js/analytics/analytics-columns.js"></script>
+    <script src="js/analytics/analytics-forms.js"></script>
+    <script src="js/analytics/analytics-index.js"></script>
+
+    <!-- JS: Module Data - Warehouse -->
+    <script src="js/warehouse/warehouse-enums.js"></script>
+    <script src="js/warehouse/warehouse-columns.js"></script>
+    <script src="js/warehouse/warehouse-forms.js"></script>
+    <script src="js/warehouse/warehouse-index.js"></script>
+
+    <!-- JS: Module Data - Compliance -->
+    <script src="js/compliance/compliance-enums.js"></script>
+    <script src="js/compliance/compliance-columns.js"></script>
+    <script src="js/compliance/compliance-forms.js"></script>
+    <script src="js/compliance/compliance-index.js"></script>
+
+    <!-- JS: Module Data - Reports -->
+    <script src="js/reports/reports-enums.js"></script>
+    <script src="js/reports/reports-columns.js"></script>
+    <script src="js/reports/reports-forms.js"></script>
+    <script src="js/reports/reports-index.js"></script>
+
+    <!-- JS: Toggle Tree + Module Filter -->
+    <script src="../l8ui/shared/layer8d-toggle-tree.js"></script>
+    <script src="../l8ui/shared/layer8d-module-filter.js"></script>
+
+    <!-- JS: Navigation Core (BEFORE nav configs) -->
+    <script src="../l8ui/m/js/layer8m-nav-crud.js"></script>
+    <script src="../l8ui/m/js/layer8m-nav-data.js"></script>
+    <script src="../l8ui/m/js/layer8m-nav.js"></script>
+
+    <!-- JS: Navigation Config (AFTER nav core) -->
+    <script src="js/nav-configs/layer8m-nav-config-base.js"></script>
+    <script src="js/nav-configs/layer8m-nav-config-vend.js"></script>
+    <script src="js/nav-configs/layer8m-nav-config.js"></script>
+
+    <!-- JS: Mobile View System -->
+    <script src="../l8ui/m/js/layer8m-view-factory.js"></script>
+    <script src="../l8ui/shared/layer8-view-switcher.js"></script>
+    <script src="../l8ui/m/js/layer8m-chart.js"></script>
+    <script src="../l8ui/m/js/layer8m-kanban.js"></script>
+    <script src="../l8ui/m/js/layer8m-calendar.js"></script>
+    <script src="../l8ui/m/js/layer8m-timeline.js"></script>
+    <script src="../l8ui/m/js/layer8m-gantt.js"></script>
+    <script src="../l8ui/m/js/layer8m-tree-grid.js"></script>
+    <script src="../l8ui/m/js/layer8m-wizard.js"></script>
+
+    <!-- JS: AI Agent (Mobile) -->
+    <script src="../l8ui/l8agent/l8agent-enums.js"></script>
+    <script src="../l8ui/l8agent/l8agent-columns.js"></script>
+    <script src="../l8ui/l8agent/l8agent-forms.js"></script>
+    <script src="../l8ui/l8agent/m/l8agent-chat-m.js"></script>
+
+    <!-- JS: App -->
+    <script src="js/app-core.js"></script>
+</body>
+</html>

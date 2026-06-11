@@ -1,0 +1,21 @@
+{
+    "login": {
+        "appTitle": "L8 Vending",
+        "appDescription": "Next-Gen AI Vending Machine Management",
+        "authEndpoint": "/auth",
+        "redirectUrl": "/app.html",
+        "sessionTimeout": 30,
+        "tfaEnabled": false
+    },
+    "app": {
+        "dateFormat": "mm/dd/yyyy",
+        "apiPrefix": "/vend",
+        "healthPath": "/0/Health"
+    },
+    "api": {
+        "prefix": "/vend",
+        "targetsPath": "/91/Targets",
+        "credsPath": "/75/Creds",
+        "defaultInventoryType": 8
+    }
+}

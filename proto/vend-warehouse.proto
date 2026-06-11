@@ -1,0 +1,160 @@
+/*
+© 2025 Sharon Aicler (saichler@gmail.com)
+
+Layer 8 Ecosystem is licensed under the Apache License, Version 2.0.
+You may obtain a copy of the License at:
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+syntax = "proto3";
+
+package vend;
+
+option go_package = "./types/vend";
+
+import "vend-common.proto";
+import "l8common.proto";
+import "api.proto";
+
+// @PrimeObject
+message VendWarehouse {
+    string warehouse_id = 1;
+    string name = 2;
+    l8common.Address address = 3;
+    VendGpsCoordinates coordinates = 4;
+    int32 capacity_sqft = 5;
+    string operating_hours = 6;
+    string contact_name = 7;
+    string contact_phone = 8;
+    string contact_email = 9;
+    string region = 10;
+    bool is_active = 11;
+    map<string, string> custom_fields = 12;
+    l8common.AuditInfo audit_info = 13;
+}
+
+message VendWarehouseList {
+    repeated VendWarehouse list = 1;
+    l8api.L8MetaData metadata = 2;
+}
+
+// @PrimeObject
+message VendWarehouseStock {
+    string stock_id = 1;
+    string warehouse_id = 2;             // cross-ref: VendWarehouse
+    string product_id = 3;               // cross-ref: VendProduct
+    int32 quantity_on_hand = 4;
+    int32 reorder_point = 5;
+    int32 reorder_quantity = 6;
+    int64 last_counted_date = 7;
+    int64 expiration_date = 8;
+    map<string, string> custom_fields = 9;
+    l8common.AuditInfo audit_info = 10;
+}
+
+message VendWarehouseStockList {
+    repeated VendWarehouseStock list = 1;
+    l8api.L8MetaData metadata = 2;
+}
+
+// @PrimeObject
+message VendSupplier {
+    string supplier_id = 1;
+    string name = 2;
+    string contact_name = 3;
+    string contact_phone = 4;
+    string contact_email = 5;
+    l8common.Address address = 6;
+    int32 lead_time_days = 7;
+    string payment_terms = 8;
+    VendSupplierStatus status = 9;
+    map<string, string> custom_fields = 10;
+    l8common.AuditInfo audit_info = 11;
+}
+
+message VendSupplierList {
+    repeated VendSupplier list = 1;
+    l8api.L8MetaData metadata = 2;
+}
+
+// Child: Purchase order line item
+message VendPurchaseOrderLine {
+    int32 line_number = 1;
+    string product_id = 2;               // cross-ref: VendProduct
+    int32 quantity_ordered = 3;
+    int32 quantity_received = 4;
+    l8common.Money unit_price = 5;
+}
+
+// @PrimeObject
+message VendPurchaseOrder {
+    string order_id = 1;
+    string supplier_id = 2;              // cross-ref: VendSupplier
+    string warehouse_id = 3;             // cross-ref: VendWarehouse
+    VendPurchaseOrderStatus status = 4;
+    int64 order_date = 5;
+    int64 expected_delivery = 6;
+    int64 actual_delivery = 7;
+    l8common.Money total_amount = 8;
+    repeated VendPurchaseOrderLine lines = 9;
+    string notes = 10;
+    map<string, string> custom_fields = 11;
+    l8common.AuditInfo audit_info = 12;
+}
+
+message VendPurchaseOrderList {
+    repeated VendPurchaseOrder list = 1;
+    l8api.L8MetaData metadata = 2;
+}
+
+// @PrimeObject
+message VendStockMovement {
+    string movement_id = 1;
+    string warehouse_id = 2;             // cross-ref: VendWarehouse
+    string product_id = 3;               // cross-ref: VendProduct
+    VendMovementType movement_type = 4;
+    int32 quantity = 5;
+    string reference_id = 6;
+    int64 timestamp = 7;
+    string performed_by = 8;
+    string notes = 9;
+    map<string, string> custom_fields = 10;
+    l8common.AuditInfo audit_info = 11;
+}
+
+message VendStockMovementList {
+    repeated VendStockMovement list = 1;
+    l8api.L8MetaData metadata = 2;
+}
+
+// Child: Vehicle load line item
+message VendVehicleLoadLine {
+    string product_id = 1;               // cross-ref: VendProduct
+    int32 quantity_loaded = 2;
+    int32 quantity_returned = 3;
+    int32 quantity_dispensed = 4;
+}
+
+// @PrimeObject
+message VendVehicleLoad {
+    string load_id = 1;
+    string route_id = 2;                 // cross-ref: VendRoute
+    string driver_id = 3;                // cross-ref: VendDriver
+    string vehicle_id = 4;              // cross-ref: VendVehicle
+    int64 load_date = 5;
+    VendVehicleLoadStatus status = 6;
+    repeated VendVehicleLoadLine lines = 7;
+    map<string, string> custom_fields = 8;
+    l8common.AuditInfo audit_info = 9;
+}
+
+message VendVehicleLoadList {
+    repeated VendVehicleLoad list = 1;
+    l8api.L8MetaData metadata = 2;
+}

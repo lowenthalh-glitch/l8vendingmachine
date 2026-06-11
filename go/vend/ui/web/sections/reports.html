@@ -1,0 +1,9 @@
+<div id="reports-section-placeholder"></div>
+<script>
+    (function() {
+        var placeholder = document.getElementById('reports-section-placeholder');
+        if (placeholder && window.Layer8SectionGenerator) {
+            placeholder.outerHTML = Layer8SectionGenerator.generate('reports');
+        }
+    })();
+</script>

@@ -1,0 +1,398 @@
+<!--
+© 2025 Sharon Aicler (saichler@gmail.com)
+Layer 8 Ecosystem is licensed under the Apache License, Version 2.0.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <title>L8 Vending</title>
+
+    <!-- CSS: App Shell (header, sidebar, nav, content layout) -->
+    <link rel="stylesheet" href="css/base-core.css">
+    <link rel="stylesheet" href="css/components-misc.css">
+    <link rel="stylesheet" href="css/components-modals.css">
+    <link rel="stylesheet" href="css/responsive.css">
+
+    <!-- CSS: Theme (tokens must load before theme) -->
+    <link rel="stylesheet" href="l8ui/shared/layer8d-theme-tokens.css">
+    <link rel="stylesheet" href="l8ui/shared/layer8d-theme.css">
+    <link rel="stylesheet" href="l8ui/shared/layer8d-animations.css">
+    <link rel="stylesheet" href="l8ui/shared/layer8d-scrollbar.css">
+
+    <!-- CSS: Section Layout -->
+    <link rel="stylesheet" href="l8ui/shared/layer8-section-layout.css">
+    <link rel="stylesheet" href="l8ui/shared/layer8-section-responsive.css">
+
+    <!-- CSS: Components -->
+    <link rel="stylesheet" href="l8ui/edit_table/layer8d-table.css">
+    <link rel="stylesheet" href="l8ui/shared/layer8d-toggle-tree.css">
+    <link rel="stylesheet" href="l8ui/popup/layer8d-popup.css">
+    <link rel="stylesheet" href="l8ui/popup/layer8d-popup-inline-table.css">
+    <link rel="stylesheet" href="l8ui/shared/layer8d-form-fields.css">
+    <link rel="stylesheet" href="l8ui/popup/layer8d-popup-forms.css">
+    <link rel="stylesheet" href="l8ui/popup/layer8d-popup-content.css">
+    <link rel="stylesheet" href="l8ui/datepicker/layer8d-datepicker.css">
+    <link rel="stylesheet" href="l8ui/reference_picker/layer8d-reference-picker.css">
+    <link rel="stylesheet" href="l8ui/input_formatters/layer8d-input-formatter.css">
+    <link rel="stylesheet" href="l8ui/notification/layer8d-notification.css">
+
+    <!-- CSS: View System -->
+    <link rel="stylesheet" href="l8ui/shared/layer8-view-switcher.css">
+    <link rel="stylesheet" href="l8ui/chart/layer8d-chart.css">
+    <link rel="stylesheet" href="l8ui/kanban/layer8d-kanban.css">
+    <link rel="stylesheet" href="l8ui/timeline/layer8d-timeline.css">
+    <link rel="stylesheet" href="l8ui/calendar/layer8d-calendar.css">
+    <link rel="stylesheet" href="l8ui/gantt/layer8d-gantt.css">
+    <link rel="stylesheet" href="l8ui/tree_grid/layer8d-tree-grid.css">
+    <link rel="stylesheet" href="l8ui/wizard/layer8d-wizard.css">
+    <link rel="stylesheet" href="l8ui/dashboard/layer8d-widget.css">
+
+    <!-- CSS: Markdown -->
+    <link rel="stylesheet" href="l8ui/shared/layer8-markdown.css">
+
+    <!-- CSS: File Upload -->
+    <link rel="stylesheet" href="l8ui/shared/layer8-file-upload.css">
+
+    <!-- CSS: SYS Module -->
+    <link rel="stylesheet" href="l8ui/sys/l8sys.css">
+    <link rel="stylesheet" href="l8ui/sys/health/l8health.css">
+    <link rel="stylesheet" href="l8ui/sys/modules/l8sys-modules.css">
+    <link rel="stylesheet" href="l8ui/sys/logs/l8logs.css">
+    <link rel="stylesheet" href="l8ui/sys/dataimport/l8dataimport.css">
+
+    <!-- CSS: Alarms (l8alarms) -->
+    <link rel="stylesheet" href="alm/alm.css">
+    <link rel="stylesheet" href="alm/alarms/alarms-correlation-tree.css">
+
+    <!-- CSS: AI Agent -->
+    <link rel="stylesheet" href="l8ui/l8agent/l8agent-chat.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <img src="l8ui/images/logo.gif" alt="L8 Vending Logo" class="header-logo">
+                <div class="header-title">
+                    <h1>L8 Vending</h1>
+                    <p class="header-subtitle">Next-Gen AI Vending Machine Management</p>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="powered-by-header">
+                    <span>Powered by</span>
+                    <img src="l8ui/images/Layer8Logo.gif" alt="Layer 8 Ecosystem" class="layer8-header-logo">
+                    <span class="layer8-header-text">Layer 8 Ecosystem</span>
+                </div>
+                <div class="user-menu">
+                    <span class="username">Admin</span>
+                    <button class="logout-btn" onclick="logout()">Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation Sidebar -->
+        <nav class="sidebar">
+            <ul class="nav-menu">
+                <li><a href="#" data-section="dashboard" class="nav-link sidebar-item active">
+                    <span class="nav-icon">📊</span><span>Dashboard</span>
+                </a></li>
+                <li><a href="#" data-section="nayax" class="nav-link sidebar-item">
+                    <span class="nav-icon">☁️</span><span>Management Systems</span>
+                </a></li>
+                <li><a href="#" data-section="fleet" class="nav-link sidebar-item">
+                    <span class="nav-icon">🏭</span><span>Fleet</span>
+                </a></li>
+                <li><a href="#" data-section="inventory" class="nav-link sidebar-item">
+                    <span class="nav-icon">📦</span><span>Inventory</span>
+                </a></li>
+                <li><a href="#" data-section="sales" class="nav-link sidebar-item">
+                    <span class="nav-icon">💰</span><span>Sales</span>
+                </a></li>
+                <li><a href="#" data-section="maintenance" class="nav-link sidebar-item">
+                    <span class="nav-icon">🔧</span><span>Maintenance</span>
+                </a></li>
+                <li><a href="#" data-section="alarms" class="nav-link sidebar-item">
+                    <span class="nav-icon">🔔</span><span>Alarms</span>
+                </a></li>
+                <li><a href="#" data-section="routes" class="nav-link sidebar-item">
+                    <span class="nav-icon">🚚</span><span>Routes</span>
+                </a></li>
+                <li><a href="#" data-section="analytics" class="nav-link sidebar-item">
+                    <span class="nav-icon">📈</span><span>Analytics</span>
+                </a></li>
+                <li><a href="#" data-section="warehouse" class="nav-link sidebar-item">
+                    <span class="nav-icon">🏪</span><span>Warehouse</span>
+                </a></li>
+                <li><a href="#" data-section="compliance" class="nav-link sidebar-item">
+                    <span class="nav-icon">✅</span><span>Compliance</span>
+                </a></li>
+                <li><a href="#" data-section="reports" class="nav-link sidebar-item">
+                    <span class="nav-icon">📋</span><span>Reports</span>
+                </a></li>
+                <li><a href="#" data-section="system" class="nav-link sidebar-item">
+                    <span class="nav-icon">⚙️</span><span>System</span>
+                </a></li>
+            </ul>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <div id="content-area"></div>
+        </main>
+    </div>
+
+    <!-- Popup Root (required for Layer8DPopup modals and forms) -->
+    <div id="layer8d-popup-root"></div>
+
+    <!-- JS: App Shell -->
+    <script src="js/sections.js"></script>
+    <script src="js/app.js"></script>
+
+    <!-- JS: Layer8 Core -->
+    <script src="l8ui/shared/layer8d-config.js"></script>
+    <script src="l8ui/shared/layer8d-utils.js"></script>
+    <script src="l8ui/shared/layer8d-renderers.js"></script>
+    <script src="l8ui/shared/layer8d-reference-registry.js"></script>
+
+    <!-- JS: Factory Components -->
+    <script src="l8ui/shared/layer8-enum-factory.js"></script>
+    <script src="l8ui/shared/layer8-ref-factory.js"></script>
+    <script src="l8ui/shared/layer8-column-factory.js"></script>
+    <script src="l8ui/shared/layer8-form-factory.js"></script>
+    <script src="l8ui/shared/layer8-form-factory-presets.js"></script>
+    <script src="l8ui/shared/layer8-svg-factory.js"></script>
+    <script src="l8ui/shared/layer8d-module-config-factory.js"></script>
+    <script src="l8ui/shared/layer8-section-generator.js"></script>
+
+    <!-- JS: Section Configs -->
+    <script src="vend-ui/dashboard/dashboard-section-config.js"></script>
+    <script src="vend-ui/nayax/nayax-section-config.js"></script>
+    <script src="vend-ui/fleet/fleet-section-config.js"></script>
+    <script src="vend-ui/inventory/inventory-section-config.js"></script>
+    <script src="vend-ui/sales/sales-section-config.js"></script>
+    <script src="vend-ui/maintenance/maintenance-section-config.js"></script>
+    <script src="l8ui/events/l8events-enums.js"></script>
+    <script src="alm/alm-section-config.js"></script>
+    <script src="vend-ui/routes/routes-section-config.js"></script>
+    <script src="vend-ui/analytics/analytics-section-config.js"></script>
+    <script src="vend-ui/warehouse/warehouse-section-config.js"></script>
+    <script src="vend-ui/compliance/compliance-section-config.js"></script>
+    <script src="vend-ui/reports/reports-section-config.js"></script>
+
+    <!-- JS: Reference Registry -->
+    <script src="js/reference-registry-vend.js"></script>
+
+    <!-- JS: Notification -->
+    <script src="l8ui/notification/layer8d-notification.js"></script>
+
+    <!-- JS: Input Formatter -->
+    <script src="l8ui/input_formatters/layer8d-input-formatter-utils.js"></script>
+    <script src="l8ui/input_formatters/layer8d-input-formatter-masks.js"></script>
+    <script src="l8ui/input_formatters/layer8d-input-formatter-types-validators.js"></script>
+    <script src="l8ui/input_formatters/layer8d-input-formatter-types.js"></script>
+    <script src="l8ui/input_formatters/layer8d-input-formatter-core.js"></script>
+    <script src="l8ui/input_formatters/layer8d-input-formatter.js"></script>
+
+    <!-- JS: Markdown -->
+    <script src="l8ui/shared/layer8-markdown.js"></script>
+
+    <!-- JS: File Upload -->
+    <script src="l8ui/shared/layer8-file-upload.js"></script>
+
+    <!-- JS: CSV Export -->
+    <script src="l8ui/shared/layer8-csv-export.js"></script>
+
+    <!-- JS: Forms -->
+    <script src="l8ui/shared/layer8d-forms-fields.js"></script>
+    <script src="l8ui/shared/layer8d-forms-fields-ext.js"></script>
+    <script src="l8ui/shared/layer8d-forms-data.js"></script>
+    <script src="l8ui/shared/layer8d-forms-pickers.js"></script>
+    <script src="l8ui/shared/layer8d-forms-modal.js"></script>
+    <script src="l8ui/shared/layer8d-forms.js"></script>
+
+    <!-- JS: Popup -->
+    <script src="l8ui/popup/layer8d-popup.js"></script>
+
+    <!-- JS: Date Picker -->
+    <script src="l8ui/datepicker/layer8d-datepicker-utils.js"></script>
+    <script src="l8ui/datepicker/layer8d-datepicker-calendar.js"></script>
+    <script src="l8ui/datepicker/layer8d-datepicker-core.js"></script>
+    <script src="l8ui/datepicker/layer8d-datepicker.js"></script>
+
+    <!-- JS: Reference Picker -->
+    <script src="l8ui/reference_picker/layer8d-reference-picker-utils.js"></script>
+    <script src="l8ui/reference_picker/layer8d-reference-picker-data.js"></script>
+    <script src="l8ui/reference_picker/layer8d-reference-picker-render.js"></script>
+    <script src="l8ui/reference_picker/layer8d-reference-picker-events.js"></script>
+    <script src="l8ui/reference_picker/layer8d-reference-picker-core.js"></script>
+    <script src="l8ui/reference_picker/layer8d-reference-picker.js"></script>
+
+    <!-- JS: Table -->
+    <script src="l8ui/edit_table/layer8d-table-core.js"></script>
+    <script src="l8ui/edit_table/layer8d-table-data.js"></script>
+    <script src="l8ui/edit_table/layer8d-table-render.js"></script>
+    <script src="l8ui/edit_table/layer8d-table-events.js"></script>
+    <script src="l8ui/edit_table/layer8d-table-filter.js"></script>
+    <script src="l8ui/edit_table/layer8d-table.js"></script>
+
+    <!-- JS: View System -->
+    <script src="l8ui/shared/layer8d-view-factory.js"></script>
+    <script src="l8ui/shared/layer8-view-switcher.js"></script>
+    <script src="l8ui/shared/layer8d-data-source.js"></script>
+    <script src="l8ui/chart/layer8d-chart-core.js"></script>
+    <script src="l8ui/chart/layer8d-chart-bar.js"></script>
+    <script src="l8ui/chart/layer8d-chart-line.js"></script>
+    <script src="l8ui/chart/layer8d-chart-pie.js"></script>
+    <script src="l8ui/kanban/layer8d-kanban-core.js"></script>
+    <script src="l8ui/kanban/layer8d-kanban-render.js"></script>
+    <script src="l8ui/timeline/layer8d-timeline.js"></script>
+    <script src="l8ui/calendar/layer8d-calendar-core.js"></script>
+    <script src="l8ui/calendar/layer8d-calendar-render.js"></script>
+    <script src="l8ui/gantt/layer8d-gantt-core.js"></script>
+    <script src="l8ui/gantt/layer8d-gantt-render.js"></script>
+    <script src="l8ui/tree_grid/layer8d-tree-grid-core.js"></script>
+    <script src="l8ui/wizard/layer8d-wizard-core.js"></script>
+    <script src="l8ui/wizard/layer8d-wizard-render.js"></script>
+    <script src="l8ui/dashboard/layer8d-widget.js"></script>
+
+    <!-- JS: Module Abstractions -->
+    <script src="l8ui/shared/layer8d-service-registry.js"></script>
+    <script src="l8ui/shared/layer8d-module-crud.js"></script>
+    <script src="l8ui/shared/layer8d-module-navigation.js"></script>
+    <script src="l8ui/shared/layer8d-toggle-tree.js"></script>
+    <script src="l8ui/shared/layer8d-module-filter.js"></script>
+    <script src="l8ui/shared/layer8d-module-factory.js"></script>
+
+    <!-- JS: Shared Vend Utilities -->
+    <script src="vend-ui/common/vend-inventory-utils.js"></script>
+
+    <!-- JS: Dashboard -->
+    <script src="vend-ui/dashboard/dashboard-init.js"></script>
+
+    <!-- JS: Management Systems Module (VCache collected data) -->
+    <script src="vend-ui/nayax/nayax-config.js"></script>
+    <script src="vend-ui/nayax/machines/machines-enums.js"></script>
+    <script src="vend-ui/nayax/machines/machines-columns.js"></script>
+    <script src="vend-ui/nayax/machines/machines-forms.js"></script>
+    <script src="vend-ui/nayax/machines/machines-detail.js"></script>
+    <script src="vend-ui/nayax/nayax-init.js"></script>
+
+    <!-- JS: Fleet Module (future Prime Object CRUD service) -->
+    <script src="vend-ui/fleet/fleet-config.js"></script>
+    <script src="vend-ui/fleet/machines/machines-enums.js"></script>
+    <script src="vend-ui/fleet/machines/machines-columns.js"></script>
+    <script src="vend-ui/fleet/machines/machines-forms.js"></script>
+    <script src="vend-ui/fleet/fleet-init.js"></script>
+
+    <!-- JS: Inventory Module (VendMachine cache from management API) -->
+    <script src="vend-ui/inventory/inventory-config.js"></script>
+    <script src="vend-ui/inventory/machines/machines-enums.js"></script>
+    <script src="vend-ui/inventory/machines/machines-columns.js"></script>
+    <script src="vend-ui/inventory/machines/machines-forms.js"></script>
+    <script src="vend-ui/inventory/inventory-init.js"></script>
+
+    <!-- JS: Sales Module -->
+    <script src="vend-ui/sales/sales-config.js"></script>
+    <script src="vend-ui/sales/transactions/transactions-enums.js"></script>
+    <script src="vend-ui/sales/transactions/transactions-columns.js"></script>
+    <script src="vend-ui/sales/transactions/transactions-forms.js"></script>
+    <script src="vend-ui/sales/sales-init.js"></script>
+
+    <!-- JS: Maintenance Module -->
+    <script src="vend-ui/maintenance/maintenance-config.js"></script>
+    <script src="vend-ui/maintenance/alerts/alerts-enums.js"></script>
+    <script src="vend-ui/maintenance/alerts/alerts-columns.js"></script>
+    <script src="vend-ui/maintenance/alerts/alerts-forms.js"></script>
+    <script src="vend-ui/maintenance/maintenance-init.js"></script>
+
+    <!-- JS: Alarms Module (l8alarms) -->
+    <script src="alm/alm-config.js"></script>
+    <script src="alm/alarms/alarms-enums.js"></script>
+    <script src="alm/alarms/alarms-columns.js"></script>
+    <script src="alm/alarms/alarms-forms.js"></script>
+    <script src="alm/events/events-enums.js"></script>
+    <script src="alm/events/events-columns.js"></script>
+    <script src="alm/events/events-forms.js"></script>
+    <script src="alm/correlation/correlation-enums.js"></script>
+    <script src="alm/correlation/correlation-columns.js"></script>
+    <script src="alm/correlation/correlation-forms.js"></script>
+    <script src="alm/policies/policies-enums.js"></script>
+    <script src="alm/policies/policies-columns.js"></script>
+    <script src="alm/policies/policies-forms.js"></script>
+    <script src="alm/maintenance/maintenance-enums.js"></script>
+    <script src="alm/maintenance/maintenance-columns.js"></script>
+    <script src="alm/maintenance/maintenance-forms.js"></script>
+    <script src="alm/archive/archive-enums.js"></script>
+    <script src="alm/archive/archive-columns.js"></script>
+    <script src="alm/archive/archive-forms.js"></script>
+    <script src="alm/alm-init.js"></script>
+    <script src="alm/alarms/alarms-correlation-tree.js"></script>
+
+    <!-- JS: Routes Module -->
+    <script src="vend-ui/routes/routes-config.js"></script>
+    <script src="vend-ui/routes/planning/planning-enums.js"></script>
+    <script src="vend-ui/routes/planning/planning-columns.js"></script>
+    <script src="vend-ui/routes/planning/planning-forms.js"></script>
+    <script src="vend-ui/routes/routes-init.js"></script>
+
+    <!-- JS: Analytics Module -->
+    <script src="vend-ui/analytics/analytics-config.js"></script>
+    <script src="vend-ui/analytics/data/data-enums.js"></script>
+    <script src="vend-ui/analytics/data/data-columns.js"></script>
+    <script src="vend-ui/analytics/data/data-forms.js"></script>
+    <script src="vend-ui/analytics/inventory-chart.js"></script>
+    <script src="vend-ui/analytics/analytics-init.js"></script>
+    <script src="vend-ui/analytics/top-performer-detail.js"></script>
+
+    <!-- JS: Warehouse Module -->
+    <script src="vend-ui/warehouse/warehouse-config.js"></script>
+    <script src="vend-ui/warehouse/stock/stock-enums.js"></script>
+    <script src="vend-ui/warehouse/stock/stock-columns.js"></script>
+    <script src="vend-ui/warehouse/stock/stock-forms.js"></script>
+    <script src="vend-ui/warehouse/warehouse-init.js"></script>
+
+    <!-- JS: Compliance Module -->
+    <script src="vend-ui/compliance/compliance-config.js"></script>
+    <script src="vend-ui/compliance/inspections/inspections-enums.js"></script>
+    <script src="vend-ui/compliance/inspections/inspections-columns.js"></script>
+    <script src="vend-ui/compliance/inspections/inspections-forms.js"></script>
+    <script src="vend-ui/compliance/compliance-init.js"></script>
+
+    <!-- JS: Reports Module -->
+    <script src="vend-ui/reports/reports-config.js"></script>
+    <script src="vend-ui/reports/data/data-enums.js"></script>
+    <script src="vend-ui/reports/data/data-columns.js"></script>
+    <script src="vend-ui/reports/data/data-forms.js"></script>
+    <script src="vend-ui/reports/reports-init.js"></script>
+
+    <!-- JS: SYS Module -->
+    <script src="l8ui/sys/l8sys-config.js"></script>
+    <script src="l8ui/sys/health/l8health.js"></script>
+    <script src="l8ui/sys/security/l8security-enums.js"></script>
+    <script src="l8ui/sys/security/l8security-columns.js"></script>
+    <script src="l8ui/sys/security/l8security-forms.js"></script>
+    <script src="l8ui/sys/security/l8security.js"></script>
+    <script src="l8ui/sys/security/l8security-users-crud.js"></script>
+    <script src="l8ui/sys/security/l8security-roles-crud.js"></script>
+    <script src="l8ui/sys/security/l8security-credentials-crud.js"></script>
+    <script src="l8ui/sys/modules/l8sys-dependency-graph.js"></script>
+    <script src="l8ui/sys/modules/l8sys-modules-map.js"></script>
+    <script src="l8ui/sys/modules/l8sys-modules.js"></script>
+    <script src="l8ui/sys/logs/l8logs.js"></script>
+    <script src="l8ui/sys/dataimport/l8dataimport.js"></script>
+    <script src="l8ui/sys/dataimport/l8dataimport-templates.js"></script>
+    <script src="l8ui/sys/dataimport/l8dataimport-transfer.js"></script>
+    <script src="l8ui/sys/dataimport/l8dataimport-execute.js"></script>
+    <script src="l8ui/sys/l8sys-init.js"></script>
+
+    <!-- JS: AI Agent -->
+    <script src="l8ui/l8agent/l8agent-enums.js"></script>
+    <script src="l8ui/l8agent/l8agent-columns.js"></script>
+    <script src="l8ui/l8agent/l8agent-forms.js"></script>
+    <script src="l8ui/l8agent/l8agent-chat.js"></script>
+</body>
+</html>

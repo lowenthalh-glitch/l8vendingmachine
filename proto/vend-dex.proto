@@ -1,0 +1,74 @@
+/*
+© 2025 Sharon Aicler (saichler@gmail.com)
+
+Layer 8 Ecosystem is licensed under the Apache License, Version 2.0.
+You may obtain a copy of the License at:
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+syntax = "proto3";
+
+package vend;
+
+option go_package = "./types/vend";
+
+import "vend-common.proto";
+import "l8common.proto";
+import "api.proto";
+
+// Child: DEX selection-level audit data
+message VendDexSelectionAudit {
+    string slot_id = 1;
+    string product_id = 2;
+    int64 price = 3;
+    int32 interval_vends = 4;
+    int32 cumulative_vends = 5;
+}
+
+// Child: DEX event log entry
+message VendDexEventLog {
+    string code = 1;
+    int64 timestamp = 2;
+    int32 count = 3;
+    string description = 4;
+}
+
+// @PrimeObject
+message VendDexAudit {
+    string audit_id = 1;
+    string machine_id = 2;                // cross-ref: VendMachine
+    int64 audit_timestamp = 3;
+    string dex_version = 4;
+    string machine_serial = 5;
+    string controller_rom = 6;
+    int32 interval_vend_count_cash = 7;
+    int64 interval_vend_value_cash = 8;
+    int32 interval_vend_count_cashless = 9;
+    int64 interval_vend_value_cashless = 10;
+    int32 interval_vend_count_free = 11;
+    int32 interval_total_vend_count = 12;
+    int64 interval_total_vend_value = 13;
+    int32 cumulative_total_vend_count = 14;
+    int64 cumulative_total_vend_value = 15;
+    int32 cash_coins_recognized = 16;
+    int32 cash_coins_to_tubes = 17;
+    int32 cash_coins_to_cashbox = 18;
+    int32 cash_bills_recognized = 19;
+    int64 cash_total_in = 20;
+    int64 cash_change_dispensed = 21;
+    repeated VendDexSelectionAudit selection_audit = 22;
+    repeated VendDexEventLog event_log = 23;
+    map<string, string> custom_fields = 24;
+    l8common.AuditInfo audit_info = 25;
+}
+
+message VendDexAuditList {
+    repeated VendDexAudit list = 1;
+    l8api.L8MetaData metadata = 2;
+}

@@ -1,0 +1,89 @@
+/*
+© 2025 Sharon Aicler (saichler@gmail.com)
+
+Layer 8 Ecosystem is licensed under the Apache License, Version 2.0.
+You may obtain a copy of the License at:
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+syntax = "proto3";
+
+package vend;
+
+option go_package = "./types/vend";
+
+import "vend-common.proto";
+import "l8common.proto";
+import "api.proto";
+
+// Child: Report schedule definition
+message VendReportSchedule {
+    string schedule_id = 1;
+    string name = 2;
+    VendReportFrequency frequency = 3;
+    string run_time = 4;
+    int32 day_of_week = 5;
+    int32 day_of_month = 6;
+    int64 start_date = 7;
+    int64 end_date = 8;
+    VendReportFormat output_format = 9;
+    string delivery_email = 10;
+    bool is_active = 11;
+    int64 next_run = 12;
+    int64 last_run = 13;
+}
+
+// Child: Report execution record
+message VendReportExecution {
+    string execution_id = 1;
+    string schedule_id = 2;
+    string status = 3;
+    int64 start_time = 4;
+    int64 end_time = 5;
+    int32 row_count = 6;
+    int64 file_size = 7;
+    string output_path = 8;
+    string error_message = 9;
+}
+
+// Child: Report subscription
+message VendReportSubscription {
+    string subscription_id = 1;
+    string schedule_id = 2;
+    string subscriber_id = 3;
+    VendReportFormat format = 4;
+    string delivery_email = 5;
+    bool is_active = 6;
+}
+
+// @PrimeObject
+message VendReport {
+    string report_id = 1;
+    string code = 2;
+    string name = 3;
+    string description = 4;
+    string report_type = 5;
+    string category = 6;
+    string owner_id = 7;
+    string query = 8;
+    VendReportFormat default_format = 9;
+    bool is_public = 10;
+    int32 execution_count = 11;
+    int64 last_executed = 12;
+    repeated VendReportSchedule schedules = 13;
+    repeated VendReportExecution executions = 14;
+    repeated VendReportSubscription subscriptions = 15;
+    map<string, string> custom_fields = 16;
+    l8common.AuditInfo audit_info = 17;
+}
+
+message VendReportList {
+    repeated VendReport list = 1;
+    l8api.L8MetaData metadata = 2;
+}

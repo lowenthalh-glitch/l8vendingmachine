@@ -1,0 +1,161 @@
+/*
+© 2025 Sharon Aicler (saichler@gmail.com)
+
+Layer 8 Ecosystem is licensed under the Apache License, Version 2.0.
+You may obtain a copy of the License at:
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+syntax = "proto3";
+
+package vend;
+
+option go_package = "./types/vend";
+
+import "vend-common.proto";
+import "l8common.proto";
+import "api.proto";
+
+// ============================================================================
+// FLEET MANAGEMENT MESSAGES
+// ============================================================================
+
+// Child type -- inventory slot in a vending machine
+message VendMachineSlot {
+  int32 slot_number = 1;
+  string product_name = 2;
+  string sku = 3;
+  int64 price = 4;
+  int32 capacity = 5;
+  int32 current_stock = 6;
+  string status = 7;
+}
+
+// VendMachineInfo holds per-machine data — stored in the machines map
+// keyed by machineId (same pattern as Gpu in GpuDevice.gpus)
+message VendMachineInfo {
+  string machine_id = 1;
+  string name = 2;
+  string type = 3;
+  string model = 4;
+  string status = 5;
+  string device_id = 6;
+  int32 daily_transactions = 7;
+  string last_transaction_at = 8;
+  string location_address = 10;
+  string location_city = 11;
+  string location_state = 12;
+  double location_lat = 13;
+  double location_lng = 14;
+}
+
+// @PrimeObject
+// VendMachine is the inventory cache entry — one per management API target.
+// Contains a map of all machines reported by the management system.
+// (Same pattern as GpuDevice which has map<string, Gpu> gpus)
+message VendMachine {
+  string machine_id = 1;
+  map<string, VendMachineInfo> machines = 4;
+}
+
+message VendMachineList {
+  repeated VendMachine list = 1;
+  l8api.L8MetaData metadata = 2;
+}
+
+// ============================================================================
+// FLEET PRIME OBJECT — individual vending machine (CRUD, persisted)
+// ============================================================================
+
+// @PrimeObject
+// VendFleetMachine represents a single vending machine as a business entity.
+// Populated from inventory cache data collected from management systems.
+message VendFleetMachine {
+  string machine_id = 1;
+  string name = 2;
+  string type = 3;
+  string model = 4;
+  string status = 5;
+  string device_id = 6;
+  int32 daily_transactions = 7;
+  string last_transaction_at = 8;
+  string management_ip = 9;
+  string location_address = 10;
+  string location_city = 11;
+  string location_state = 12;
+  double location_lat = 13;
+  double location_lng = 14;
+
+  // Slot inventory (populated from per-machine polling)
+  repeated VendMachineSlot inventory = 30;
+  int32 total_slots = 31;
+  int32 empty_slots = 32;
+  int32 low_stock_slots = 33;
+  string inventory_last_updated = 34;
+
+  l8common.AuditInfo audit_info = 40;
+}
+
+message VendFleetMachineList {
+  repeated VendFleetMachine list = 1;
+  l8api.L8MetaData metadata = 2;
+}
+
+// ============================================================================
+// FLEET GROUPING (business layer — kept for future CRUD)
+// ============================================================================
+
+// Child type -- machine membership in a group
+message VendGroupMember {
+  string machine_id = 1;
+  string serial_number = 2;
+  string model = 3;
+  string location_name = 4;
+  VendMachineStatus machine_status = 5;
+}
+
+// @PrimeObject
+// VendMachineGroup represents a logical grouping of vending machines
+message VendMachineGroup {
+  string group_id = 1;
+  string name = 2;
+  string description = 3;
+  string region = 4;
+  string operator_id = 5;
+  int32 machine_count = 6;
+  repeated VendGroupMember machines = 9;
+  map<string, string> custom_fields = 7;
+  l8common.AuditInfo audit_info = 8;
+}
+
+message VendMachineGroupList {
+  repeated VendMachineGroup list = 1;
+  l8api.L8MetaData metadata = 2;
+}
+
+// @PrimeObject
+// VendLocation represents a physical location where a vending machine is placed
+message VendLocation {
+  string location_id = 1;
+  string name = 2;
+  l8common.Address address = 3;
+  VendGpsCoordinates coordinates = 4;
+  string location_type = 5;
+  string timezone = 6;
+  string contact_name = 7;
+  string contact_phone = 8;
+  string contact_email = 9;
+  map<string, string> custom_fields = 10;
+  l8common.AuditInfo audit_info = 11;
+}
+
+message VendLocationList {
+  repeated VendLocation list = 1;
+  l8api.L8MetaData metadata = 2;
+}

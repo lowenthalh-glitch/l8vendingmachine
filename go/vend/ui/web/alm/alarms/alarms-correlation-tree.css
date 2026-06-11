@@ -1,0 +1,136 @@
+/*
+Layer 8 Alarms - Correlation Tree Styles
+Styles for the correlation tab using Layer8DTreeGrid
+*/
+
+/* Loading state */
+.alm-corr-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+    color: var(--layer8d-text-medium);
+}
+
+.alm-corr-loading::before {
+    content: '';
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--layer8d-border);
+    border-top-color: var(--layer8d-primary);
+    border-radius: 50%;
+    animation: alm-corr-spin 0.8s linear infinite;
+    margin-right: 10px;
+}
+
+@keyframes alm-corr-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Empty state */
+.alm-corr-empty {
+    text-align: center;
+    padding: 32px 16px;
+    color: var(--layer8d-text-muted);
+}
+
+.alm-corr-empty-icon {
+    font-size: 28px;
+    margin-bottom: 8px;
+    opacity: 0.5;
+}
+
+/* Error state */
+.alm-corr-error {
+    text-align: center;
+    padding: 24px 16px;
+    color: var(--layer8d-error);
+}
+
+/* Type badges (inline within tree grid cells) */
+.alm-corr-badge {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+.alm-corr-badge-inline {
+    margin-right: 6px;
+}
+
+.alm-corr-badge-root {
+    background-color: var(--layer8d-error);
+    color: #fff;
+}
+
+.alm-corr-badge-symptom {
+    background-color: var(--layer8d-warning);
+    color: #fff;
+}
+
+/* Alarm name in tree grid cell */
+.alm-corr-name {
+    font-weight: 500;
+    color: var(--layer8d-text-dark);
+}
+
+.alm-corr-name-current {
+    font-weight: 700;
+    color: var(--layer8d-primary);
+}
+
+.alm-corr-severity {
+    flex-shrink: 0;
+}
+
+.alm-corr-meta {
+    color: var(--layer8d-text-muted);
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+/* Current alarm row highlight in tree grid */
+.alm-corr-current-row {
+    background-color: var(--layer8d-bg-light) !important;
+    border-left: 3px solid var(--layer8d-primary);
+}
+
+/* Parent link — shown above tree grid when alarm has a root cause */
+.alm-corr-parent-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    margin-bottom: 8px;
+    border-radius: 6px;
+    border: 1px dashed var(--layer8d-border);
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+
+.alm-corr-parent-link:hover {
+    background-color: var(--layer8d-bg-light);
+}
+
+.alm-corr-parent-arrow {
+    font-size: 14px;
+    color: var(--layer8d-text-muted);
+    flex-shrink: 0;
+}
+
+.alm-corr-parent-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: var(--layer8d-text-muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+}

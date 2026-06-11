@@ -1,0 +1,58 @@
+<div class="section-container system-section l8-section" style="padding-left: 0;">
+    <div class="page-header" style="padding: 20px;">
+        <h1>System Administration</h1>
+        <p class="section-subtitle">Health Monitoring, Security Management, and Module Configuration</p>
+    </div>
+
+    <!-- Module Tabs -->
+    <div class="l8-module-tabs">
+        <button class="l8-module-tab active" data-module="health">
+            <span class="tab-label">Health</span>
+        </button>
+        <button class="l8-module-tab" data-module="security">
+            <span class="tab-label">Security</span>
+        </button>
+        <button class="l8-module-tab" data-module="modules">
+            <span class="tab-label">Modules</span>
+        </button>
+        <button class="l8-module-tab" data-module="logs">
+            <span class="tab-label">Logs</span>
+        </button>
+        <button class="l8-module-tab" data-module="dataimport">
+            <span class="tab-label">Data Import</span>
+        </button>
+    </div>
+
+    <div class="section-content" style="margin-left: -7px; width: calc(100% + 7px);">
+        <div class="l8-module-content active" data-module="health">
+            <div class="l8-table-container" id="health-table-container"></div>
+        </div>
+        <div class="l8-module-content" data-module="security">
+            <nav class="l8-subnav">
+                <a class="l8-subnav-item active" data-service="users">Users</a>
+                <a class="l8-subnav-item" data-service="roles">Roles</a>
+                <a class="l8-subnav-item" data-service="credentials">Credentials</a>
+            </nav>
+            <div class="l8-service-content">
+                <div class="l8-service-view active" data-service="users">
+                    <div class="l8-table-container" id="security-users-table-container"></div>
+                </div>
+                <div class="l8-service-view" data-service="roles">
+                    <div class="l8-table-container" id="security-roles-table-container"></div>
+                </div>
+                <div class="l8-service-view" data-service="credentials">
+                    <div class="l8-table-container" id="security-credentials-table-container"></div>
+                </div>
+            </div>
+        </div>
+        <div class="l8-module-content" data-module="modules">
+            <div class="l8-table-container" id="modules-table-container"></div>
+        </div>
+        <div class="l8-module-content" data-module="logs">
+            <div class="l8-table-container" id="logs-table-container"></div>
+        </div>
+        <div class="l8-module-content" data-module="dataimport">
+            <div id="dataimport-container"></div>
+        </div>
+    </div>
+</div>

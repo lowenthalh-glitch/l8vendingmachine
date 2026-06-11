@@ -1,0 +1,9 @@
+<div id="sales-section-placeholder"></div>
+<script>
+    (function() {
+        var placeholder = document.getElementById('sales-section-placeholder');
+        if (placeholder && window.Layer8SectionGenerator) {
+            placeholder.outerHTML = Layer8SectionGenerator.generate('sales');
+        }
+    })();
+</script>

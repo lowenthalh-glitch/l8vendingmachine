@@ -1,0 +1,118 @@
+/*
+© 2025 Sharon Aicler (saichler@gmail.com)
+
+Layer 8 Ecosystem is licensed under the Apache License, Version 2.0.
+You may obtain a copy of the License at:
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+syntax = "proto3";
+
+package vend;
+
+option go_package = "./types/vend";
+
+import "vend-common.proto";
+import "l8common.proto";
+import "api.proto";
+
+// Child: Inspection report document
+message VendInspectionReport {
+    string report_id = 1;
+    string title = 2;
+    string content = 3;
+    string document_id = 4;
+    int64 created_date = 5;
+}
+
+// @PrimeObject
+message VendInspection {
+    string inspection_id = 1;
+    string machine_id = 2;               // cross-ref: VendMachine
+    string location_id = 3;              // cross-ref: VendLocation
+    VendInspectionType inspection_type = 4;
+    VendInspectionStatus status = 5;
+    int64 planned_date = 6;
+    int64 actual_date = 7;
+    string inspector_name = 8;
+    string scope = 9;
+    string result = 10;
+    string notes = 11;
+    repeated VendInspectionReport reports = 12;
+    map<string, string> custom_fields = 13;
+    l8common.AuditInfo audit_info = 14;
+}
+
+message VendInspectionList {
+    repeated VendInspection list = 1;
+    l8api.L8MetaData metadata = 2;
+}
+
+// Child: Remediation action for a finding
+message VendRemediationAction {
+    string action_id = 1;
+    string description = 2;
+    string assigned_to = 3;
+    int64 due_date = 4;
+    int64 completed_date = 5;
+    string status = 6;
+}
+
+// @PrimeObject
+message VendInspectionFinding {
+    string finding_id = 1;
+    string inspection_id = 2;            // cross-ref: VendInspection
+    int32 finding_number = 3;
+    string title = 4;
+    VendFindingSeverity severity = 5;
+    VendFindingStatus status = 6;
+    string condition = 7;
+    string criteria = 8;
+    string cause = 9;
+    string effect = 10;
+    string recommendation = 11;
+    string management_response = 12;
+    string responsible_id = 13;
+    int64 due_date = 14;
+    int64 closed_date = 15;
+    string evidence_document_id = 16;
+    bool is_repeat_finding = 17;
+    string prior_finding_id = 18;
+    repeated VendRemediationAction actions = 19;
+    map<string, string> custom_fields = 20;
+    l8common.AuditInfo audit_info = 21;
+}
+
+message VendInspectionFindingList {
+    repeated VendInspectionFinding list = 1;
+    l8api.L8MetaData metadata = 2;
+}
+
+// @PrimeObject
+message VendCertification {
+    string certification_id = 1;
+    string machine_id = 2;               // cross-ref: VendMachine
+    string location_id = 3;              // cross-ref: VendLocation
+    string certification_type = 4;
+    string standard = 5;
+    string certifying_body = 6;
+    string certificate_number = 7;
+    int64 issue_date = 8;
+    int64 expiry_date = 9;
+    int64 renewal_date = 10;
+    VendCertificationStatus status = 11;
+    string scope = 12;
+    map<string, string> custom_fields = 13;
+    l8common.AuditInfo audit_info = 14;
+}
+
+message VendCertificationList {
+    repeated VendCertification list = 1;
+    l8api.L8MetaData metadata = 2;
+}

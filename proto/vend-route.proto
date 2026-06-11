@@ -1,0 +1,77 @@
+/*
+© 2025 Sharon Aicler (saichler@gmail.com)
+
+Layer 8 Ecosystem is licensed under the Apache License, Version 2.0.
+You may obtain a copy of the License at:
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+syntax = "proto3";
+
+package vend;
+
+option go_package = "./types/vend";
+
+import "vend-common.proto";
+import "l8common.proto";
+import "api.proto";
+
+// @PrimeObject
+message VendRoute {
+    string route_id = 1;
+    string name = 2;
+    string description = 3;
+    VendRouteStatus status = 4;
+    string driver_id = 5;                // cross-ref: VendDriver
+    string vehicle_id = 6;
+    int64 planned_date = 7;
+    int64 actual_start = 8;
+    int64 actual_end = 9;
+    double total_distance = 10;
+    int32 total_duration = 11;
+    repeated VendRouteStop stops = 12;   // Child: embedded route stops
+    map<string, string> custom_fields = 13;
+    l8common.AuditInfo audit_info = 14;
+}
+
+message VendRouteList {
+    repeated VendRoute list = 1;
+    l8api.L8MetaData metadata = 2;
+}
+
+// Child type (NOT a Prime Object) -- embedded in VendRoute
+message VendRouteStop {
+    int32 stop_order = 1;
+    string machine_id = 2;               // cross-ref: VendMachine
+    int64 planned_arrival = 3;
+    int64 actual_arrival = 4;
+    string status = 5;
+    string restock_order_id = 6;         // cross-ref: VendRestockOrder
+    string service_urgency = 7;
+}
+
+// @PrimeObject
+message VendDriver {
+    string driver_id = 1;
+    string first_name = 2;
+    string last_name = 3;
+    string phone = 4;
+    string email = 5;
+    string license_number = 6;
+    string vehicle_id = 7;
+    string home_base_location_id = 8;    // cross-ref: VendLocation
+    bool is_active = 9;
+    map<string, string> custom_fields = 10;
+    l8common.AuditInfo audit_info = 11;
+}
+
+message VendDriverList {
+    repeated VendDriver list = 1;
+    l8api.L8MetaData metadata = 2;
+}
