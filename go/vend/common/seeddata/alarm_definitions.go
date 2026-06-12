@@ -20,7 +20,7 @@ package seeddata
 
 import (
 	"github.com/saichler/l8alarms/go/types/alm"
-	"github.com/saichler/l8events/go/types/l8events"
+	"github.com/saichler/l8types/go/types/l8events"
 )
 
 // GetAlarmDefinitions returns the 10 pre-configured alarm definitions for vending machines.

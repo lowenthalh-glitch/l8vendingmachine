@@ -94,6 +94,7 @@ func RegisterTypes(resources ifs.IResources) {
 	// Route Optimization
 	common.RegisterType(resources, &vend.VendRoute{}, &vend.VendRouteList{}, "RouteId")
 	common.RegisterType(resources, &vend.VendDriver{}, &vend.VendDriverList{}, "DriverId")
+	common.RegisterType(resources, &vend.VendDeliveryTruck{}, &vend.VendDeliveryTruckList{}, "TruckId")
 
 	// AI Analytics
 	common.RegisterType(resources, &vend.VendForecast{}, &vend.VendForecastList{}, "ForecastId")
@@ -110,9 +111,8 @@ func RegisterTypes(resources ifs.IResources) {
 	// DEX Audit
 	common.RegisterType(resources, &vend.VendDexAudit{}, &vend.VendDexAuditList{}, "AuditId")
 
-	// Warehouse & Supply Chain
-	common.RegisterType(resources, &vend.VendWarehouse{}, &vend.VendWarehouseList{}, "WarehouseId")
-	common.RegisterType(resources, &vend.VendWarehouseStock{}, &vend.VendWarehouseStockList{}, "StockId")
+	// Stocking Facilities & Supply Chain
+	common.RegisterType(resources, &vend.VendStockingFacility{}, &vend.VendStockingFacilityList{}, "FacilityId")
 	common.RegisterType(resources, &vend.VendSupplier{}, &vend.VendSupplierList{}, "SupplierId")
 	common.RegisterType(resources, &vend.VendPurchaseOrder{}, &vend.VendPurchaseOrderList{}, "OrderId")
 	common.RegisterType(resources, &vend.VendStockMovement{}, &vend.VendStockMovementList{}, "MovementId")

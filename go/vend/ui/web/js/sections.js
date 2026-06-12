@@ -3,6 +3,7 @@
 // Section mapping to HTML files
 const sections = {
     dashboard: 'sections/dashboard.html',
+    map: 'sections/map.html',
     nayax: 'sections/nayax.html',
     fleet: 'sections/fleet.html',
     inventory: 'sections/inventory.html',
@@ -22,6 +23,11 @@ const sectionInitializers = {
     dashboard: () => {
         if (typeof initializeDashboard === 'function') {
             initializeDashboard();
+        }
+    },
+    map: () => {
+        if (typeof initializeMap === 'function') {
+            initializeMap();
         }
     },
     nayax: () => {

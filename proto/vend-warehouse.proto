@@ -23,43 +23,53 @@ import "l8common.proto";
 import "api.proto";
 
 // @PrimeObject
-message VendWarehouse {
-    string warehouse_id = 1;
+message VendStockingFacility {
+    string facility_id = 1;
     string name = 2;
-    l8common.Address address = 3;
-    VendGpsCoordinates coordinates = 4;
-    int32 capacity_sqft = 5;
-    string operating_hours = 6;
-    string contact_name = 7;
-    string contact_phone = 8;
-    string contact_email = 9;
-    string region = 10;
-    bool is_active = 11;
-    map<string, string> custom_fields = 12;
-    l8common.AuditInfo audit_info = 13;
+    string code = 3;
+
+    // Location
+    l8common.Address address = 4;
+    VendGpsCoordinates coordinates = 5;
+    string timezone = 6;
+
+    // Capacity
+    int32 total_storage_sq_ft = 7;
+    int32 refrigerated_storage_sq_ft = 8;
+    int32 loading_docks = 9;
+    int32 max_trucks_parked = 10;
+
+    // Operations
+    VendFacilityStatus status = 11;
+    string operating_hours_start = 12;   // "HH:MM"
+    string operating_hours_end = 13;     // "HH:MM"
+    repeated VendDayOfWeek operating_days = 14;
+
+    // Stock
+    repeated VendFacilityStockItem stock = 15;
+
+    // Contacts
+    string manager_name = 16;
+    string manager_phone = 17;
+    string manager_email = 18;
+
+    map<string, string> custom_fields = 19;
+    l8common.AuditInfo audit_info = 20;
 }
 
-message VendWarehouseList {
-    repeated VendWarehouse list = 1;
-    l8api.L8MetaData metadata = 2;
+// Child type (NOT a Prime Object) -- embedded in VendStockingFacility
+// Matches the product catalog from the Nayax management system simulator.
+message VendFacilityStockItem {
+    string product_name = 1;
+    string sku = 2;
+    int64 price = 3;                     // cents
+    int32 quantity = 4;
+    int32 max_quantity = 5;
+    int32 reorder_point = 6;             // trigger purchase order below this level
 }
 
-// @PrimeObject
-message VendWarehouseStock {
-    string stock_id = 1;
-    string warehouse_id = 2;             // cross-ref: VendWarehouse
-    string product_id = 3;               // cross-ref: VendProduct
-    int32 quantity_on_hand = 4;
-    int32 reorder_point = 5;
-    int32 reorder_quantity = 6;
-    int64 last_counted_date = 7;
-    int64 expiration_date = 8;
-    map<string, string> custom_fields = 9;
-    l8common.AuditInfo audit_info = 10;
-}
-
-message VendWarehouseStockList {
-    repeated VendWarehouseStock list = 1;
+message VendStockingFacilityList {
+    repeated VendStockingFacility list = 1;
     l8api.L8MetaData metadata = 2;
 }
 
@@ -96,7 +106,7 @@ message VendPurchaseOrderLine {
 message VendPurchaseOrder {
     string order_id = 1;
     string supplier_id = 2;              // cross-ref: VendSupplier
-    string warehouse_id = 3;             // cross-ref: VendWarehouse
+    string facility_id = 3;             // cross-ref: VendStockingFacility
     VendPurchaseOrderStatus status = 4;
     int64 order_date = 5;
     int64 expected_delivery = 6;
@@ -116,7 +126,7 @@ message VendPurchaseOrderList {
 // @PrimeObject
 message VendStockMovement {
     string movement_id = 1;
-    string warehouse_id = 2;             // cross-ref: VendWarehouse
+    string facility_id = 2;             // cross-ref: VendStockingFacility
     string product_id = 3;               // cross-ref: VendProduct
     VendMovementType movement_type = 4;
     int32 quantity = 5;
@@ -146,7 +156,7 @@ message VendVehicleLoad {
     string load_id = 1;
     string route_id = 2;                 // cross-ref: VendRoute
     string driver_id = 3;                // cross-ref: VendDriver
-    string vehicle_id = 4;              // cross-ref: VendVehicle
+    string vehicle_id = 4;              // cross-ref: VendDeliveryTruck
     int64 load_date = 5;
     VendVehicleLoadStatus status = 6;
     repeated VendVehicleLoadLine lines = 7;

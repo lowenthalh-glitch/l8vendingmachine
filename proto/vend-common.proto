@@ -285,6 +285,62 @@ enum VendSupplierStatus {
   VEND_SUPPLIER_STATUS_SUSPENDED = 3;
 }
 
+// --- Facility Enums ---
+
+enum VendFacilityStatus {
+  VEND_FACILITY_STATUS_UNSPECIFIED = 0;
+  VEND_FACILITY_STATUS_ACTIVE = 1;
+  VEND_FACILITY_STATUS_MAINTENANCE = 2;
+  VEND_FACILITY_STATUS_CLOSED = 3;
+}
+
+// --- Driver Enums ---
+
+enum VendLicenseClass {
+  VEND_LICENSE_CLASS_UNSPECIFIED = 0;
+  VEND_LICENSE_CLASS_C = 1;              // Standard car/light truck
+  VEND_LICENSE_CLASS_B = 2;              // Medium truck (26,001+ lbs)
+  VEND_LICENSE_CLASS_A = 3;              // Heavy truck / combination
+}
+
+enum VendDayOfWeek {
+  VEND_DAY_OF_WEEK_UNSPECIFIED = 0;
+  VEND_DAY_OF_WEEK_MONDAY = 1;
+  VEND_DAY_OF_WEEK_TUESDAY = 2;
+  VEND_DAY_OF_WEEK_WEDNESDAY = 3;
+  VEND_DAY_OF_WEEK_THURSDAY = 4;
+  VEND_DAY_OF_WEEK_FRIDAY = 5;
+  VEND_DAY_OF_WEEK_SATURDAY = 6;
+  VEND_DAY_OF_WEEK_SUNDAY = 7;
+}
+
+// --- Truck Enums ---
+
+enum VendTruckStatus {
+  VEND_TRUCK_STATUS_UNSPECIFIED = 0;
+  VEND_TRUCK_STATUS_ACTIVE = 1;
+  VEND_TRUCK_STATUS_MAINTENANCE = 2;
+  VEND_TRUCK_STATUS_EN_ROUTE = 3;
+  VEND_TRUCK_STATUS_DECOMMISSIONED = 4;
+}
+
+enum VendFuelType {
+  VEND_FUEL_TYPE_UNSPECIFIED = 0;
+  VEND_FUEL_TYPE_GASOLINE = 1;
+  VEND_FUEL_TYPE_DIESEL = 2;
+  VEND_FUEL_TYPE_ELECTRIC = 3;
+  VEND_FUEL_TYPE_HYBRID = 4;
+}
+
+enum VendTruckType {
+  VEND_TRUCK_TYPE_UNSPECIFIED = 0;
+  VEND_TRUCK_TYPE_BOX_TRUCK = 1;
+  VEND_TRUCK_TYPE_CARGO_VAN = 2;
+  VEND_TRUCK_TYPE_REFRIGERATED = 3;
+  VEND_TRUCK_TYPE_SPRINTER = 4;
+  VEND_TRUCK_TYPE_PICKUP = 5;
+}
+
 // ============================================================================
 // SHARED NON-PRIME-OBJECT TYPES
 // ============================================================================

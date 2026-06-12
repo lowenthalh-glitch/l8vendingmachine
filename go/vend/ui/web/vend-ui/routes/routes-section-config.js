@@ -3,14 +3,15 @@
     'use strict';
     Layer8SectionConfigs.register('routes', {
         title: 'Route Management',
-        subtitle: 'Routes, Drivers',
+        subtitle: 'Routes, Drivers & Trucks',
         icon: '🚚',
         initFn: 'initializeRoutes',
         modules: [{
             key: 'routes', label: 'Routes', icon: '🚚', isDefault: true,
             services: [
                 { key: 'routes', label: 'Routes', icon: '🗺️', isDefault: true },
-                { key: 'drivers', label: 'Drivers', icon: '👤' }
+                { key: 'drivers', label: 'Drivers', icon: '👤' },
+                { key: 'trucks', label: 'Trucks', icon: '🚛' }
             ]
         }]
     });

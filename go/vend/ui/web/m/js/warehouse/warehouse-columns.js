@@ -6,21 +6,14 @@
     var render = MobileWarehouseStock.render;
 
     MobileWarehouseStock.columns = {
-        VendWarehouse: [
-            ...col.id('warehouseId'),
+        VendStockingFacility: [
+            ...col.id('facilityId'),
             { key: 'name', label: 'Name', primary: true, sortKey: 'name', filterKey: 'name' },
-            ...col.col('region', 'Region'),
-            ...col.number('capacitySqft', 'Capacity (sqft)'),
-            ...col.col('contactName', 'Contact'),
-            ...col.boolean('isActive', 'Active')
-        ],
-        VendWarehouseStock: [
-            ...col.id('stockId'),
-            ...col.col('warehouseId', 'Warehouse'),
-            { key: 'productId', label: 'Product', primary: true, sortKey: 'productId', filterKey: 'productId' },
-            ...col.number('quantityOnHand', 'Qty On Hand'),
-            ...col.number('reorderPoint', 'Reorder Point'),
-            ...col.number('reorderQuantity', 'Reorder Qty')
+            ...col.col('code', 'Code'),
+            ...col.status('status', 'Status', enums.FACILITY_STATUS.values, render.facilityStatus),
+            ...col.number('totalStorageSqFt', 'Storage (sqft)'),
+            ...col.number('loadingDocks', 'Loading Docks'),
+            ...col.col('managerName', 'Manager')
         ],
         VendSupplier: [
             ...col.id('supplierId'),
@@ -32,14 +25,14 @@
         VendPurchaseOrder: [
             ...col.id('orderId'),
             { key: 'supplierId', label: 'Supplier', primary: true, sortKey: 'supplierId', filterKey: 'supplierId' },
-            ...col.col('warehouseId', 'Warehouse'),
+            ...col.col('facilityId', 'Facility'),
             ...col.status('status', 'Status', enums.PO_STATUS.values, render.poStatus),
             ...col.date('orderDate', 'Order Date'),
             ...col.money('totalAmount', 'Total')
         ],
         VendStockMovement: [
             ...col.id('movementId'),
-            { key: 'warehouseId', label: 'Warehouse', primary: true, sortKey: 'warehouseId', filterKey: 'warehouseId' },
+            { key: 'facilityId', label: 'Facility', primary: true, sortKey: 'facilityId', filterKey: 'facilityId' },
             ...col.col('productId', 'Product'),
             ...col.enum('movementType', 'Type', null, render.movementType),
             ...col.number('quantity', 'Quantity'),

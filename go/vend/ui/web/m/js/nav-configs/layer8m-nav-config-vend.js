@@ -56,7 +56,8 @@
             services: {
                 'routes': [
                     { key: 'routes', label: 'Routes', icon: 'routes', endpoint: '/10/Route', model: 'VendRoute', idField: 'routeId' },
-                    { key: 'drivers', label: 'Drivers', icon: 'routes', endpoint: '/10/Driver', model: 'VendDriver', idField: 'driverId' }
+                    { key: 'drivers', label: 'Drivers', icon: 'routes', endpoint: '/10/Driver', model: 'VendDriver', idField: 'driverId' },
+                    { key: 'trucks', label: 'Trucks', icon: 'routes', endpoint: '/10/Truck', model: 'VendDeliveryTruck', idField: 'truckId' }
                 ]
             }
         },
@@ -78,8 +79,7 @@
             ],
             services: {
                 'stock': [
-                    { key: 'warehouses', label: 'Warehouses', icon: 'warehouse', endpoint: '/10/Warehouse', model: 'VendWarehouse', idField: 'warehouseId' },
-                    { key: 'warehouse-stock', label: 'Stock', icon: 'warehouse', endpoint: '/10/WhseStock', model: 'VendWarehouseStock', idField: 'stockId' },
+                    { key: 'facilities', label: 'Facilities', icon: 'warehouse', endpoint: '/10/Facility', model: 'VendStockingFacility', idField: 'facilityId' },
                     { key: 'suppliers', label: 'Suppliers', icon: 'warehouse', endpoint: '/10/Supplier', model: 'VendSupplier', idField: 'supplierId' },
                     { key: 'purchase-orders', label: 'Purchase Orders', icon: 'warehouse', endpoint: '/10/PurchOrd', model: 'VendPurchaseOrder', idField: 'orderId', supportedViews: ['table', 'kanban'] },
                     { key: 'movements', label: 'Movements', icon: 'warehouse', endpoint: '/10/StockMove', model: 'VendStockMovement', idField: 'movementId', readOnly: true },

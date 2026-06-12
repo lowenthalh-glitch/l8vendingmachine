@@ -17,7 +17,7 @@ package seeddata
 
 import (
 	"github.com/saichler/l8alarms/go/types/alm"
-	"github.com/saichler/l8events/go/types/l8events"
+	"github.com/saichler/l8types/go/types/l8events"
 	"github.com/saichler/l8notify/go/types/l8notify"
 )
 

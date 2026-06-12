@@ -16,7 +16,7 @@ limitations under the License.
 package seeddata
 
 import (
-	"github.com/saichler/l8events/go/types/l8events"
+	"github.com/saichler/l8types/go/types/l8events"
 )
 
 // GetMaintenanceWindowTemplates returns sample maintenance window configurations.

@@ -23,7 +23,24 @@
             { key: 'lastName', label: 'Last Name', primary: true, sortKey: 'lastName', filterKey: 'lastName' },
             ...col.col('phone', 'Phone'),
             ...col.col('email', 'Email'),
+            ...col.enum('licenseClass', 'License', null, render.licenseClass),
+            ...col.date('hireDate', 'Hire Date'),
             ...col.boolean('isActive', 'Active')
+        ],
+        VendDeliveryTruck: [
+            ...col.id('truckId'),
+            { key: 'name', label: 'Name', primary: true, sortKey: 'name', filterKey: 'name' },
+            { key: 'status', label: 'Status', secondary: true, sortKey: 'status', filterKey: 'status',
+              enumValues: enums.TRUCK_STATUS.values,
+              render: (item) => render.truckStatus(item.status) },
+            ...col.col('plateNumber', 'Plate'),
+            ...col.col('make', 'Make'),
+            ...col.col('model', 'Model'),
+            ...col.number('year', 'Year'),
+            ...col.number('milesPerGallon', 'MPG'),
+            ...col.number('mileage', 'Mileage'),
+            ...col.enum('fuelType', 'Fuel', null, render.fuelType),
+            ...col.boolean('refrigerationEquipped', 'Refrigerated')
         ]
     };
 })();

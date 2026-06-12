@@ -63,15 +63,105 @@ message VendDriver {
     string last_name = 3;
     string phone = 4;
     string email = 5;
+
+    // License
     string license_number = 6;
-    string vehicle_id = 7;
+    VendLicenseClass license_class = 12;
+
+    // Assignment
+    string truck_id = 7;                 // cross-ref: VendDeliveryTruck
     string home_base_location_id = 8;    // cross-ref: VendLocation
     bool is_active = 9;
+    int64 hire_date = 13;
+
+    // Home address
+    l8common.Address home_address = 14;
+
+    // Current location (updated when driver's device connects)
+    double current_latitude = 16;
+    double current_longitude = 17;
+    int64 last_location_update = 18;
+
+    // Weekly schedule
+    repeated VendDriverScheduleDay schedule = 15;
+
     map<string, string> custom_fields = 10;
     l8common.AuditInfo audit_info = 11;
 }
 
+// Child type (NOT a Prime Object) -- embedded in VendDriver
+// One entry per working day, with start time and optional alternate start location.
+message VendDriverScheduleDay {
+    VendDayOfWeek day = 1;
+    string start_time = 2;               // "HH:MM" format (e.g., "07:30")
+    string start_location_id = 3;        // cross-ref: VendLocation (blank = home address)
+}
+
 message VendDriverList {
     repeated VendDriver list = 1;
+    l8api.L8MetaData metadata = 2;
+}
+
+// @PrimeObject
+message VendDeliveryTruck {
+    string truck_id = 1;
+    string plate_number = 2;
+    string vin = 3;
+    string name = 4;
+
+    // Vehicle Specs
+    string make = 5;
+    string model = 6;
+    int32 year = 7;
+    VendTruckType type = 8;
+    int32 cargo_capacity_cu_ft = 9;
+    int32 max_payload_lbs = 10;
+    VendFuelType fuel_type = 11;
+    int32 mileage = 12;
+    double miles_per_gallon = 13;
+
+    // Status
+    VendTruckStatus status = 14;
+    string current_driver_id = 15;       // cross-ref: VendDriver
+    string current_route_id = 16;        // cross-ref: VendRoute
+    string home_depot_id = 17;           // cross-ref: VendStockingFacility
+
+    // Location
+    double last_latitude = 18;
+    double last_longitude = 19;
+    int64 last_location_update = 20;
+
+    // Maintenance
+    int64 last_maintenance_date = 21;
+    int64 next_maintenance_date = 22;
+    int32 next_maintenance_mileage = 23;
+    int64 insurance_expiry = 24;
+    int64 registration_expiry = 25;
+
+    // Capacity Tracking
+    bool refrigeration_equipped = 26;
+    bool cash_collection_equipped = 27;
+    bool coin_changer_equipped = 28;
+
+    // Stock carried on the truck
+    repeated VendTruckStockItem stock = 29;
+
+    // Audit
+    map<string, string> custom_fields = 30;
+    l8common.AuditInfo audit_info = 31;
+}
+
+// Child type (NOT a Prime Object) -- embedded in VendDeliveryTruck
+// Matches the product catalog from the Nayax management system simulator.
+message VendTruckStockItem {
+    string product_name = 1;
+    string sku = 2;
+    int64 price = 3;                     // cents
+    int32 quantity = 4;                  // units currently on the truck
+    int32 max_quantity = 5;              // max units the truck can carry for this product
+}
+
+message VendDeliveryTruckList {
+    repeated VendDeliveryTruck list = 1;
     l8api.L8MetaData metadata = 2;
 }

@@ -3,14 +3,13 @@
     'use strict';
     Layer8SectionConfigs.register('warehouse', {
         title: 'Warehouse & Supply Chain',
-        subtitle: 'Warehouses, Stock, Suppliers, Purchase Orders, Movements, Vehicle Loads',
+        subtitle: 'Facilities, Stock, Suppliers, Purchase Orders, Movements, Vehicle Loads',
         icon: '🏪',
         initFn: 'initializeWarehouse',
         modules: [{
             key: 'stock', label: 'Stock', icon: '🏪', isDefault: true,
             services: [
-                { key: 'warehouses', label: 'Warehouses', icon: '🏪', isDefault: true },
-                { key: 'warehouse-stock', label: 'Stock', icon: '📦' },
+                { key: 'facilities', label: 'Facilities', icon: '🏪', isDefault: true },
                 { key: 'suppliers', label: 'Suppliers', icon: '🤝' },
                 { key: 'purchase-orders', label: 'Purchase Orders', icon: '📄' },
                 { key: 'movements', label: 'Movements', icon: '↔️' },

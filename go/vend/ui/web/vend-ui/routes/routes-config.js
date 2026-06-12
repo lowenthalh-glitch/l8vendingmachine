@@ -10,7 +10,8 @@
             'routes': mod('Routes', '', [
                 svc('routes', 'Routes', '', '/10/Route', 'VendRoute',
                     { supportedViews: ['table', 'gantt'] }),
-                svc('drivers', 'Drivers', '', '/10/Driver', 'VendDriver')
+                svc('drivers', 'Drivers', '', '/10/Driver', 'VendDriver'),
+                svc('trucks', 'Trucks', '', '/10/Truck', 'VendDeliveryTruck')
             ])
         },
         submodules: ['RoutePlanning']

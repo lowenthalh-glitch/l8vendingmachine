@@ -35,25 +35,41 @@ func generateBusinessFoundation(client *VendClient, store *MockDataStore) error 
 		return err
 	}
 
-	whs := generateWarehouses()
-	wids := extractIDs(whs, func(v interface{}) string { return v.(*vend.VendWarehouse).WarehouseId })
-	if err := runOp(client, "Warehouses", "/vend/10/Warehouse",
-		&vend.VendWarehouseList{List: whs}, wids, &store.WarehouseIDs); err != nil {
+	facs := generateFacilities()
+	fids := extractIDs(facs, func(v interface{}) string { return v.(*vend.VendStockingFacility).FacilityId })
+	if err := runOp(client, "Facilities", "/vend/10/Facility",
+		&vend.VendStockingFacilityList{List: facs}, fids, &store.FacilityIDs); err != nil {
 		return err
 	}
 
 	sups := generateSuppliers()
 	sids := extractIDs(sups, func(v interface{}) string { return v.(*vend.VendSupplier).SupplierId })
-	return runOp(client, "Suppliers", "/vend/10/Supplier",
-		&vend.VendSupplierList{List: sups}, sids, &store.SupplierIDs)
+	if err := runOp(client, "Suppliers", "/vend/10/Supplier",
+		&vend.VendSupplierList{List: sups}, sids, &store.SupplierIDs); err != nil {
+		return err
+	}
+
+	trucks := generateTrucks(store)
+	tids := extractIDs(trucks, func(v interface{}) string { return v.(*vend.VendDeliveryTruck).TruckId })
+	if err := runOp(client, "Trucks", "/vend/10/Truck",
+		&vend.VendDeliveryTruckList{List: trucks}, tids, &store.TruckIDs); err != nil {
+		return err
+	}
+
+	drivers := generateDrivers(store)
+	dids := extractIDs(drivers, func(v interface{}) string { return v.(*vend.VendDriver).DriverId })
+	return runOp(client, "Drivers", "/vend/10/Driver",
+		&vend.VendDriverList{List: drivers}, dids, &store.DriverIDs)
 }
 
 func PrintSummary(store *MockDataStore) {
 	fmt.Println("\n=== Mock Data Summary ===")
 	fmt.Printf("Locations:        %d\n", len(store.LocationIDs))
 	fmt.Printf("Machine Groups:   %d\n", len(store.GroupIDs))
-	fmt.Printf("Warehouses:       %d\n", len(store.WarehouseIDs))
+	fmt.Printf("Facilities:       %d\n", len(store.FacilityIDs))
 	fmt.Printf("Suppliers:        %d\n", len(store.SupplierIDs))
+	fmt.Printf("Trucks:           %d\n", len(store.TruckIDs))
+	fmt.Printf("Drivers:          %d\n", len(store.DriverIDs))
 	fmt.Println("========================")
 	fmt.Println("Machine inventory data comes from the Nayax simulator via collection pipeline.")
 }

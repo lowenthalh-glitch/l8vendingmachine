@@ -6,6 +6,8 @@ package mocks
 type MockDataStore struct {
 	LocationIDs  []string
 	GroupIDs     []string
-	WarehouseIDs []string
+	FacilityIDs []string
 	SupplierIDs  []string
+	TruckIDs     []string
+	DriverIDs    []string
 }

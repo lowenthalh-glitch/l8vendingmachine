@@ -6,6 +6,13 @@
     var factory = window.Layer8EnumFactory;
     var { createStatusRenderer, renderEnum } = Layer8DRenderers;
 
+    var FACILITY_STATUS = factory.create([
+        ['Unspecified', null, ''],
+        ['Active', 'active', 'layer8d-status-active'],
+        ['Maintenance', 'maintenance', 'layer8d-status-pending'],
+        ['Closed', 'closed', 'layer8d-status-terminated']
+    ]);
+
     var PO_STATUS = factory.create([
         ['Unspecified', null, ''],
         ['Draft', 'draft', 'layer8d-status-pending'],
@@ -36,6 +43,7 @@
     ]);
 
     WarehouseStock.enums = {
+        FACILITY_STATUS: FACILITY_STATUS,
         PO_STATUS: PO_STATUS,
         MOVEMENT_TYPE: MOVEMENT_TYPE,
         VEHICLE_LOAD_STATUS: VEHICLE_LOAD_STATUS,
@@ -43,6 +51,7 @@
     };
 
     WarehouseStock.render = {
+        facilityStatus: createStatusRenderer(FACILITY_STATUS.enum, FACILITY_STATUS.classes),
         poStatus: createStatusRenderer(PO_STATUS.enum, PO_STATUS.classes),
         movementType: function(value) { return renderEnum(value, MOVEMENT_TYPE.enum); },
         vehicleLoadStatus: createStatusRenderer(VEHICLE_LOAD_STATUS.enum, VEHICLE_LOAD_STATUS.classes),

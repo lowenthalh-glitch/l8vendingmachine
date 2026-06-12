@@ -13,7 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package warehouses
+package trucks
 
 import (
 	common "github.com/saichler/l8vendingmachine/go/vend/common"
@@ -22,25 +22,25 @@ import (
 )
 
 const (
-	ServiceName = "Warehouse"
+	ServiceName = "Truck"
 	ServiceArea = byte(10)
 )
 
 func Activate(creds, dbname string, vnic ifs.IVNic) {
 	common.ActivateService(common.ServiceConfig{
 		ServiceName: ServiceName, ServiceArea: ServiceArea,
-		PrimaryKey: "WarehouseId", Callback: newWarehouseServiceCallback(vnic),
-	}, &vend.VendWarehouse{}, &vend.VendWarehouseList{}, creds, dbname, vnic)
+		PrimaryKey: "TruckId", Callback: newTruckServiceCallback(vnic),
+	}, &vend.VendDeliveryTruck{}, &vend.VendDeliveryTruckList{}, creds, dbname, vnic)
 }
 
-func Warehouses(vnic ifs.IVNic) (ifs.IServiceHandler, bool) {
+func Trucks(vnic ifs.IVNic) (ifs.IServiceHandler, bool) {
 	return common.ServiceHandler(ServiceName, ServiceArea, vnic)
 }
 
-func Warehouse(warehouseId string, vnic ifs.IVNic) (*vend.VendWarehouse, error) {
-	result, err := common.GetEntity(ServiceName, ServiceArea, &vend.VendWarehouse{WarehouseId: warehouseId}, vnic)
+func Truck(truckId string, vnic ifs.IVNic) (*vend.VendDeliveryTruck, error) {
+	result, err := common.GetEntity(ServiceName, ServiceArea, &vend.VendDeliveryTruck{TruckId: truckId}, vnic)
 	if err != nil || result == nil {
 		return nil, err
 	}
-	return result.(*vend.VendWarehouse), nil
+	return result.(*vend.VendDeliveryTruck), nil
 }

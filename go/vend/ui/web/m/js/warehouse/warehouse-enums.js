@@ -28,6 +28,13 @@
         ['Completed', 'completed', 'inactive']
     ]);
 
+    var FACILITY_STATUS = factory.create([
+        ['Unspecified', null, ''],
+        ['Active', 'active', 'active'],
+        ['Maintenance', 'maintenance', 'pending'],
+        ['Closed', 'closed', 'terminated']
+    ]);
+
     var SUPPLIER_STATUS = factory.create([
         ['Unspecified', null, ''],
         ['Active', 'active', 'active'],
@@ -39,6 +46,7 @@
         PO_STATUS: PO_STATUS,
         MOVEMENT_TYPE: MOVEMENT_TYPE,
         VEHICLE_LOAD_STATUS: VEHICLE_LOAD_STATUS,
+        FACILITY_STATUS: FACILITY_STATUS,
         SUPPLIER_STATUS: SUPPLIER_STATUS
     };
 
@@ -46,12 +54,12 @@
         poStatus: createStatusRenderer(PO_STATUS.enum, PO_STATUS.classes),
         movementType: function(value) { return renderEnum(value, MOVEMENT_TYPE.enum); },
         vehicleLoadStatus: createStatusRenderer(VEHICLE_LOAD_STATUS.enum, VEHICLE_LOAD_STATUS.classes),
+        facilityStatus: createStatusRenderer(FACILITY_STATUS.enum, FACILITY_STATUS.classes),
         supplierStatus: createStatusRenderer(SUPPLIER_STATUS.enum, SUPPLIER_STATUS.classes)
     };
 
     MobileWarehouseStock.primaryKeys = {
-        VendWarehouse: 'warehouseId',
-        VendWarehouseStock: 'stockId',
+        VendStockingFacility: 'facilityId',
         VendSupplier: 'supplierId',
         VendPurchaseOrder: 'orderId',
         VendStockMovement: 'movementId',

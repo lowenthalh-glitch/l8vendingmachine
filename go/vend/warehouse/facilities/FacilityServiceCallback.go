@@ -13,7 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package warehouses
+package facilities
 
 import (
 	common "github.com/saichler/l8vendingmachine/go/vend/common"
@@ -21,8 +21,8 @@ import (
 	"github.com/saichler/l8types/go/ifs"
 )
 
-func newWarehouseServiceCallback(vnic ifs.IVNic) ifs.IServiceCallback {
-	return common.NewValidation(&vend.VendWarehouse{}, vnic).
-		Require(func(v interface{}) string { return v.(*vend.VendWarehouse).WarehouseId }, "WarehouseId").
+func newFacilityServiceCallback(vnic ifs.IVNic) ifs.IServiceCallback {
+	return common.NewValidation(&vend.VendStockingFacility{}, vnic).
+		Require(func(v interface{}) string { return v.(*vend.VendStockingFacility).FacilityId }, "FacilityId").
 		Build()
 }

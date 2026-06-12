@@ -5,15 +5,40 @@
     var enums = WarehouseStock.enums;
 
     WarehouseStock.forms = {
-        VendWarehouse: f.form('Warehouse', [
-            f.section('Warehouse Information', [
+        VendStockingFacility: f.form('Stocking Facility', [
+            f.section('Identity', [
                 ...f.text('name', 'Name', true),
-                ...f.text('region', 'Region'),
-                ...f.number('capacitySqft', 'Capacity (sqft)'),
-                ...f.text('contactName', 'Contact Name'),
-                ...f.text('contactPhone', 'Contact Phone'),
-                ...f.text('contactEmail', 'Contact Email'),
-                ...f.checkbox('isActive', 'Active')
+                ...f.text('code', 'Code')
+            ]),
+            f.section('Location', [
+                ...f.address('address'),
+                ...f.text('timezone', 'Timezone')
+            ]),
+            f.section('Capacity', [
+                ...f.number('totalStorageSqFt', 'Total Storage (sqft)'),
+                ...f.number('refrigeratedStorageSqFt', 'Refrigerated Storage (sqft)'),
+                ...f.number('loadingDocks', 'Loading Docks'),
+                ...f.number('maxTrucksParked', 'Max Trucks Parked')
+            ]),
+            f.section('Operations', [
+                ...f.select('status', 'Status', enums.FACILITY_STATUS.enum),
+                ...f.text('operatingHoursStart', 'Operating Hours Start'),
+                ...f.text('operatingHoursEnd', 'Operating Hours End')
+            ]),
+            f.section('Stock', [
+                ...f.inlineTable('stock', 'Stock Items', [
+                    { key: 'productName', label: 'Product', type: 'text' },
+                    { key: 'sku', label: 'SKU', type: 'text' },
+                    { key: 'price', label: 'Price', type: 'money' },
+                    { key: 'quantity', label: 'Qty', type: 'number' },
+                    { key: 'maxQuantity', label: 'Max', type: 'number' },
+                    { key: 'reorderPoint', label: 'Reorder Point', type: 'number' }
+                ])
+            ]),
+            f.section('Contacts', [
+                ...f.text('managerName', 'Manager Name'),
+                ...f.text('managerPhone', 'Manager Phone'),
+                ...f.text('managerEmail', 'Manager Email')
             ])
         ]),
         VendSupplier: f.form('Supplier', [
@@ -30,7 +55,7 @@
         VendPurchaseOrder: f.form('Purchase Order', [
             f.section('Order Information', [
                 ...f.reference('supplierId', 'Supplier', 'VendSupplier'),
-                ...f.reference('warehouseId', 'Warehouse', 'VendWarehouse'),
+                ...f.reference('facilityId', 'Facility', 'VendStockingFacility'),
                 ...f.select('status', 'Status', enums.PO_STATUS.enum),
                 ...f.date('orderDate', 'Order Date'),
                 ...f.date('expectedDelivery', 'Expected Delivery'),
@@ -40,7 +65,7 @@
         VendStockMovement: f.form('Stock Movement', [
             f.section('Movement Details', [
                 ...f.text('movementId', 'Movement ID', false),
-                ...f.text('warehouseId', 'Warehouse', false),
+                ...f.text('facilityId', 'Facility', false),
                 ...f.text('productId', 'Product', false),
                 ...f.text('movementType', 'Type', false),
                 ...f.text('quantity', 'Quantity', false),
@@ -54,15 +79,6 @@
                 ...f.text('vehicleId', 'Vehicle ID'),
                 ...f.date('loadDate', 'Load Date'),
                 ...f.select('status', 'Status', enums.VEHICLE_LOAD_STATUS.enum)
-            ])
-        ]),
-        VendWarehouseStock: f.form('Warehouse Stock', [
-            f.section('Stock Information', [
-                ...f.reference('warehouseId', 'Warehouse', 'VendWarehouse'),
-                ...f.reference('productId', 'Product', 'VendProduct'),
-                ...f.number('quantityOnHand', 'Quantity On Hand'),
-                ...f.number('reorderPoint', 'Reorder Point'),
-                ...f.number('reorderQuantity', 'Reorder Quantity')
             ])
         ])
     };

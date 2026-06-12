@@ -8,8 +8,7 @@
         namespace: 'Warehouse',
         modules: {
             'stock': mod('Stock', '\u{1F4E6}', [
-                svc('warehouses', 'Warehouses', '\u{1F3ED}', '/10/Warehouse', 'VendWarehouse'),
-                svc('warehouse-stock', 'Stock', '\u{1F4CB}', '/10/WhseStock', 'VendWarehouseStock'),
+                svc('facilities', 'Facilities', '\u{1F3ED}', '/10/Facility', 'VendStockingFacility'),
                 svc('suppliers', 'Suppliers', '\u{1F4E5}', '/10/Supplier', 'VendSupplier'),
                 svc('purchase-orders', 'PO', '\u{1F4C4}', '/10/PurchOrd', 'VendPurchaseOrder',
                     { supportedViews: ['table', 'kanban'] }),

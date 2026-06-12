@@ -54,13 +54,32 @@ var GroupNames = []string{
 	"Transportation Hubs", "Education Campus",
 }
 
-var WarehouseNames = []string{
-	"Central Distribution Center", "North Regional Warehouse", "South Regional Warehouse",
+var FacilityNames = []string{
+	"Austin Central Depot", "Austin North Hub", "Austin South Hub",
+}
+
+var FacilityCodes = []string{
+	"AUS-01", "AUS-02", "AUS-03",
 }
 
 var SupplierNames = []string{
 	"Coca-Cola Bottling Co.", "PepsiCo Distribution",
 	"Red Bull Distribution", "Frito-Lay Snacks", "Mars Wrigley Confectionery",
+}
+
+var TruckMakes = []string{
+	"Ford", "Freightliner", "Isuzu", "Mercedes-Benz", "Ram", "Chevrolet", "GMC", "Hino",
+}
+
+var TruckModels = []string{
+	"E-450 Cutaway", "M2 106", "NPR-HD", "Sprinter 3500",
+	"ProMaster 3500", "Express 4500", "Savana 3500", "195",
+}
+
+var TruckNames = []string{
+	"Truck-NYC-01", "Truck-NYC-02", "Truck-LAX-01", "Truck-CHI-01",
+	"Truck-HOU-01", "Truck-PHX-01", "Truck-SFO-01", "Truck-DAL-01",
+	"Truck-ATL-01", "Truck-MIA-01",
 }
 
 var DriverFirstNames = []string{

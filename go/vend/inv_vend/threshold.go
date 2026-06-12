@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/saichler/l8alarms/go/types/alm"
-	evt "github.com/saichler/l8events/go/types/l8events"
+	evt "github.com/saichler/l8types/go/types/l8events"
 	"github.com/saichler/l8types/go/ifs"
 	vendcommon "github.com/saichler/l8vendingmachine/go/vend/common"
 	"github.com/saichler/l8vendingmachine/go/vend/fleet/machines"

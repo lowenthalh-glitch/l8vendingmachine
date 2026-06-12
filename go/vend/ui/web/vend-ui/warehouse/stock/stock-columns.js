@@ -6,21 +6,17 @@
     var render = WarehouseStock.render;
 
     WarehouseStock.columns = {
-        VendWarehouse: [
-            ...col.id('warehouseId'),
+        VendStockingFacility: [
+            ...col.id('facilityId'),
             ...col.col('name', 'Name'),
-            ...col.col('region', 'Region'),
-            ...col.number('capacitySqft', 'Capacity (sqft)'),
-            ...col.col('contactName', 'Contact'),
-            ...col.boolean('isActive', 'Active')
-        ],
-        VendWarehouseStock: [
-            ...col.id('stockId'),
-            ...col.col('warehouseId', 'Warehouse'),
-            ...col.col('productId', 'Product'),
-            ...col.number('quantityOnHand', 'Qty On Hand'),
-            ...col.number('reorderPoint', 'Reorder Point'),
-            ...col.number('reorderQuantity', 'Reorder Qty')
+            ...col.col('code', 'Code'),
+            ...col.status('status', 'Status', enums.FACILITY_STATUS.values, render.facilityStatus),
+            ...col.number('totalStorageSqFt', 'Total Storage (sqft)'),
+            ...col.number('refrigeratedStorageSqFt', 'Refrigerated (sqft)'),
+            ...col.number('loadingDocks', 'Loading Docks'),
+            ...col.number('maxTrucksParked', 'Max Trucks'),
+            ...col.col('managerName', 'Manager'),
+            ...col.col('managerPhone', 'Manager Phone')
         ],
         VendSupplier: [
             ...col.id('supplierId'),
@@ -32,14 +28,14 @@
         VendPurchaseOrder: [
             ...col.id('orderId'),
             ...col.col('supplierId', 'Supplier'),
-            ...col.col('warehouseId', 'Warehouse'),
+            ...col.col('facilityId', 'Facility'),
             ...col.status('status', 'Status', enums.PO_STATUS.values, render.poStatus),
             ...col.date('orderDate', 'Order Date'),
             ...col.money('totalAmount', 'Total')
         ],
         VendStockMovement: [
             ...col.id('movementId'),
-            ...col.col('warehouseId', 'Warehouse'),
+            ...col.col('facilityId', 'Facility'),
             ...col.col('productId', 'Product'),
             ...col.enum('movementType', 'Type', null, render.movementType),
             ...col.number('quantity', 'Quantity'),
@@ -55,8 +51,7 @@
     };
 
     WarehouseStock.primaryKeys = {
-        VendWarehouse: 'warehouseId',
-        VendWarehouseStock: 'stockId',
+        VendStockingFacility: 'facilityId',
         VendSupplier: 'supplierId',
         VendPurchaseOrder: 'orderId',
         VendStockMovement: 'movementId',

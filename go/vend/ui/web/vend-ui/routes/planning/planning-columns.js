@@ -21,12 +21,31 @@
             ...col.col('lastName', 'Last Name'),
             ...col.col('phone', 'Phone'),
             ...col.col('email', 'Email'),
+            ...col.enum('licenseClass', 'License', null, render.licenseClass),
+            ...col.date('hireDate', 'Hire Date'),
             ...col.boolean('isActive', 'Active')
+        ],
+        VendDeliveryTruck: [
+            ...col.id('truckId'),
+            ...col.col('name', 'Name'),
+            ...col.col('plateNumber', 'Plate'),
+            ...col.enum('type', 'Type', null, render.truckType),
+            ...col.col('make', 'Make'),
+            ...col.col('model', 'Model'),
+            ...col.number('year', 'Year'),
+            ...col.status('status', 'Status', enums.TRUCK_STATUS.values, render.truckStatus),
+            ...col.number('milesPerGallon', 'MPG'),
+            ...col.number('mileage', 'Mileage'),
+            ...col.number('cargoCapacityCuFt', 'Cargo (cu ft)'),
+            ...col.enum('fuelType', 'Fuel', null, render.fuelType),
+            ...col.boolean('refrigerationEquipped', 'Refrigerated'),
+            ...col.boolean('cashCollectionEquipped', 'Cash Collection')
         ]
     };
 
     RoutePlanning.primaryKeys = {
         VendRoute: 'routeId',
-        VendDriver: 'driverId'
+        VendDriver: 'driverId',
+        VendDeliveryTruck: 'truckId'
     };
 })();
