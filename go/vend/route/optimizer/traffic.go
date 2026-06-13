@@ -15,6 +15,8 @@ import (
 	"strings"
 
 	"github.com/saichler/l8types/go/ifs"
+	"github.com/saichler/l8types/go/types/l8api"
+	vendcommon "github.com/saichler/l8vendingmachine/go/vend/common"
 )
 
 const (
@@ -126,9 +128,18 @@ func RefineWithTraffic(route *BuiltRoute, startTime int64, config *RouteConfig, 
 }
 
 func getAPIKey(nic ifs.IVNic) string {
-	_, _, apiKey, _, err := nic.Resources().Security().Credential(credentialKey, credentialDb, nic.Resources())
-	if err != nil || apiKey == "" {
+	// Read from the Credentials service (not ShallowSecurityProvider)
+	results, err := vendcommon.GetEntities("Creds", byte(75), &l8api.L8Credentials{Id: credentialKey}, nic)
+	if err != nil || len(results) == 0 {
 		return ""
 	}
-	return apiKey
+	cred, ok := results[0].(*l8api.L8Credentials)
+	if !ok || cred.Creds == nil {
+		return ""
+	}
+	entry, exists := cred.Creds[credentialDb]
+	if !exists || entry == nil {
+		return ""
+	}
+	return entry.Zside
 }
