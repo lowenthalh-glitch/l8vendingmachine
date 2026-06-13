@@ -58,6 +58,9 @@ message VendRouteStop {
     string service_urgency = 7;
     string stop_type = 8;               // "machine" or "reload"
     string facility_id = 9;             // Only set for reload stops
+    string machine_name = 10;
+    string location_address = 11;
+    string location_city = 12;
 }
 
 // @PrimeObject

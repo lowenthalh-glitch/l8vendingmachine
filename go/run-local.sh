@@ -32,6 +32,7 @@ fi
 if $CLEAN; then
     # Recreate database
     echo "Clean mode: recreating database..."
+    rm -rf /data/postgres/admin
     docker rm -f unsecure-postgres 2>/dev/null || true
     docker run -d --name unsecure-postgres -p 5432:5432 \
         -v /data/:/data/ saichler/unsecure-postgres:latest \

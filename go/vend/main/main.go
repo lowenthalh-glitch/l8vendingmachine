@@ -38,6 +38,7 @@ import (
 	"github.com/saichler/l8types/go/ifs"
 	"github.com/saichler/l8utils/go/utils/ipsegment"
 	"github.com/saichler/l8vendingmachine/go/vend/common"
+	"github.com/saichler/l8vendingmachine/go/vend/route/optimizer"
 	"github.com/saichler/l8vendingmachine/go/vend/services"
 )
 
@@ -94,6 +95,8 @@ func main() {
 	fmt.Println("[vend] Activating Pollaris targets...")
 	pollaris.Activate(nic)
 	targets.Activate(common.DB_CREDS, common.DB_NAME, nic)
+	fmt.Println("[vend] Activating route optimizer...")
+	optimizer.ActivateOptimizer(nic)
 	fmt.Println("[vend] All services activated!")
 
 	common.WaitForSignal(res)

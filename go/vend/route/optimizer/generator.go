@@ -43,19 +43,20 @@ func GenerateRoutes(nic ifs.IVNic, req *vend.VendRouteOptRequest) ([]*vend.VendR
 		maxDetour = req.MaxDetourDistance
 	}
 
-	// Step 1: Build demand lists
-	listA, listB, err := BuildDemandLists(nic)
+	// Step 1: Build demand lists + machine address info
+	listA, listB, machineInfo, err := BuildDemandLists(nic)
 	if err != nil {
 		return nil, fmt.Errorf("failed to build demand lists: %v", err)
 	}
+	nic.Resources().Logger().Info(fmt.Sprintf("Route optimizer: List A=%d, List B=%d, machines=%d", len(listA), len(listB), len(machineInfo)))
 	if len(listA) == 0 {
-		return nil, nil // Nothing needs restocking
+		return nil, nil
 	}
 
 	req.ListACount = int32(len(listA))
 
 	// Step 2-3: Cluster machines
-	clusters := ClusterMachines(listA, listB, maxDist, maxDetour)
+	clusters := ClusterMachines(listA, listB, maxDist, maxDetour, config.AvgSpeedMph, config.ServiceMinutes)
 	if len(clusters) == 0 {
 		return nil, nil
 	}
@@ -96,7 +97,7 @@ func GenerateRoutes(nic ifs.IVNic, req *vend.VendRouteOptRequest) ([]*vend.VendR
 		RefineWithTraffic(built, startTime, config, nic)
 
 		// Step 7: Generate VendRoute
-		route := toVendRoute(built, assignment, allFacilities, plannedDate, i+1)
+		route := toVendRoute(built, assignment, allFacilities, machineInfo, plannedDate, i+1)
 		l8c.GenerateID(&route.RouteId)
 		vendcommon.PostEntity(routes.ServiceName, routes.ServiceArea, route, nic)
 
@@ -131,7 +132,8 @@ func buildConfig(req *vend.VendRouteOptRequest) *RouteConfig {
 }
 
 func toVendRoute(built *BuiltRoute, assignment *Assignment,
-	facilities []*vend.VendStockingFacility, plannedDate int64, seq int) *vend.VendRoute {
+	facilities []*vend.VendStockingFacility, machineInfo map[string]MachineInfo,
+	plannedDate int64, seq int) *vend.VendRoute {
 
 	t := time.Unix(plannedDate, 0)
 	name := fmt.Sprintf("Route %s-%02d", t.Format("2006-01-02"), seq)
@@ -167,13 +169,38 @@ func toVendRoute(built *BuiltRoute, assignment *Assignment,
 			machineId = ""
 			stopFacilityId = s.FacilityId
 		}
+		mName := ""
+		mAddr := ""
+		mCity := ""
+		if !s.IsReload {
+			if mi, ok := machineInfo[machineId]; ok {
+				mName = mi.Name
+				mAddr = mi.Address
+				mCity = mi.City
+			}
+		} else {
+			// For reload stops, show facility name/address
+			for _, f := range facilities {
+				if f.FacilityId == stopFacilityId {
+					mName = f.Name
+					if f.Address != nil {
+						mAddr = f.Address.Line1
+						mCity = f.Address.City
+					}
+					break
+				}
+			}
+		}
 		stops[i] = &vend.VendRouteStop{
-			StopOrder:      int32(i + 1),
-			MachineId:      machineId,
-			PlannedArrival: arrival,
-			ServiceUrgency: urgency,
-			StopType:       stopType,
-			FacilityId:     stopFacilityId,
+			StopOrder:       int32(i + 1),
+			MachineId:       machineId,
+			PlannedArrival:  arrival,
+			ServiceUrgency:  urgency,
+			StopType:        stopType,
+			FacilityId:      stopFacilityId,
+			MachineName:     mName,
+			LocationAddress: mAddr,
+			LocationCity:    mCity,
 		}
 	}
 

@@ -14,10 +14,13 @@
     window.initializeRoutes = function() {
         if (origInit) origInit();
 
-        // Inject "Generate Routes" button after a short delay (DOM needs to render)
-        setTimeout(function() {
+        // Inject "Generate Routes" button — retry until DOM is ready
+        function tryInjectButton(attempt) {
             var container = document.querySelector('.l8-service-view[data-service="routes"]');
-            if (!container) return;
+            if (!container) {
+                if (attempt < 10) setTimeout(function() { tryInjectButton(attempt + 1); }, 300);
+                return;
+            }
             // Avoid duplicate buttons
             if (container.querySelector('.vend-generate-routes-btn')) return;
 
@@ -68,6 +71,7 @@
             });
 
             container.insertBefore(btn, container.firstChild);
-        }, 300);
+        }
+        tryInjectButton(0);
     };
 })();

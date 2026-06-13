@@ -5,6 +5,8 @@
 package optimizer
 
 import (
+	"fmt"
+
 	"github.com/saichler/l8types/go/ifs"
 	"github.com/saichler/l8vendingmachine/go/types/vend"
 	vendcommon "github.com/saichler/l8vendingmachine/go/vend/common"
@@ -26,17 +28,38 @@ type MachineDemand struct {
 
 // BuildDemandLists reads fleet machines and classifies them into
 // List A (needs restock now) and List B (can wait 1 day).
-func BuildDemandLists(nic ifs.IVNic) ([]MachineDemand, []MachineDemand, error) {
+// MachineInfo holds address data for a fleet machine.
+type MachineInfo struct {
+	Name    string
+	Address string
+	City    string
+}
+
+func BuildDemandLists(nic ifs.IVNic) ([]MachineDemand, []MachineDemand, map[string]MachineInfo, error) {
 	results, err := vendcommon.GetEntities(machines.ServiceName, machines.ServiceArea, &vend.VendFleetMachine{}, nic)
 	if err != nil {
-		return nil, nil, err
+		nic.Resources().Logger().Error("BuildDemandLists: GetEntities error: ", err.Error())
+		return nil, nil, nil, err
 	}
+	nic.Resources().Logger().Info(fmt.Sprintf("BuildDemandLists: got %d fleet machines", len(results)))
 
 	var listA, listB []MachineDemand
+	infoMap := make(map[string]MachineInfo)
 
 	for _, elem := range results {
 		fm, ok := elem.(*vend.VendFleetMachine)
-		if !ok || fm.LocationLat == 0 && fm.LocationLng == 0 {
+		if !ok {
+			continue
+		}
+
+		// Build address lookup for all machines
+		infoMap[fm.MachineId] = MachineInfo{
+			Name:    fm.Name,
+			Address: fm.LocationAddress,
+			City:    fm.LocationCity,
+		}
+
+		if fm.LocationLat == 0 && fm.LocationLng == 0 {
 			continue
 		}
 		if fm.Status == "offline" || fm.Status == "decommissioned" {
@@ -57,7 +80,7 @@ func BuildDemandLists(nic ifs.IVNic) ([]MachineDemand, []MachineDemand, error) {
 		}
 	}
 
-	return listA, listB, nil
+	return listA, listB, infoMap, nil
 }
 
 func buildMachineDemand(fm *vend.VendFleetMachine) *MachineDemand {

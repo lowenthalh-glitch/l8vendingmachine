@@ -12,7 +12,23 @@
                 ...f.select('status', 'Status', enums.ROUTE_STATUS.enum),
                 ...f.reference('driverId', 'Driver', 'VendDriver'),
                 ...f.reference('vehicleId', 'Vehicle', 'VendDeliveryTruck'),
+                ...f.reference('facilityId', 'Facility', 'VendStockingFacility'),
                 ...f.date('plannedDate', 'Planned Date')
+            ]),
+            f.section('Route Metrics', [
+                ...f.number('totalDistance', 'Distance (miles)'),
+                ...f.number('totalDuration', 'Duration (min)'),
+                ...f.number('estimatedFuelCost', 'Est. Fuel Cost')
+            ]),
+            f.section('Stops', [
+                ...f.inlineTable('stops', 'Route Stops', [
+                    { key: 'stopOrder', label: '#', type: 'number' },
+                    { key: 'stopType', label: 'Type', type: 'text' },
+                    { key: 'machineName', label: 'Name', type: 'text' },
+                    { key: 'locationAddress', label: 'Address', type: 'text' },
+                    { key: 'locationCity', label: 'City', type: 'text' },
+                    { key: 'serviceUrgency', label: 'Urgency', type: 'text' }
+                ])
             ])
         ]),
         VendDriver: f.form('Driver', [

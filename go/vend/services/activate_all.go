@@ -7,7 +7,6 @@ import (
 	"sync"
 
 	"github.com/saichler/l8types/go/ifs"
-	"github.com/saichler/l8vendingmachine/go/vend/route/optimizer"
 )
 
 const parallelWorkers = 20
@@ -43,7 +42,4 @@ func ActivateAllServices(creds, dbname string, nic ifs.IVNic) {
 		}(fn)
 	}
 	wg.Wait()
-
-	// Command services (non-CRUD) — activated after all entity services are ready
-	optimizer.ActivateOptimizer(nic)
 }

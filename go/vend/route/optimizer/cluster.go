@@ -4,6 +4,10 @@
  */
 package optimizer
 
+const (
+	MaxRouteDurationSecs = 8 * 3600 // 8 hours max per route
+)
+
 // Cluster is a group of machines to be served by one truck in one route.
 type Cluster struct {
 	Machines    []MachineDemand
@@ -14,7 +18,10 @@ type Cluster struct {
 
 // ClusterMachines groups List A machines by proximity, then inserts List B
 // machines into existing clusters if the detour is small enough.
-func ClusterMachines(listA, listB []MachineDemand, maxDistMiles, maxDetourMiles float64) []Cluster {
+// Clusters are capped at 8 hours estimated duration.
+func ClusterMachines(listA, listB []MachineDemand, maxDistMiles, maxDetourMiles float64,
+	avgSpeedMph float64, serviceMinutes int32) []Cluster {
+
 	if len(listA) == 0 {
 		return nil
 	}
@@ -23,7 +30,6 @@ func ClusterMachines(listA, listB []MachineDemand, maxDistMiles, maxDetourMiles 
 	var clusters []Cluster
 
 	for {
-		// Find the first unassigned machine
 		seedIdx := -1
 		for i, a := range assigned {
 			if !a {
@@ -38,8 +44,8 @@ func ClusterMachines(listA, listB []MachineDemand, maxDistMiles, maxDetourMiles 
 		cluster := Cluster{TotalDemand: make(map[string]int32)}
 		addToCluster(&cluster, listA[seedIdx])
 		assigned[seedIdx] = true
+		clusterDist := 0.0
 
-		// Grow cluster by adding nearest unassigned machines
 		for {
 			bestIdx := -1
 			bestDist := maxDistMiles + 1
@@ -59,15 +65,23 @@ func ClusterMachines(listA, listB []MachineDemand, maxDistMiles, maxDetourMiles 
 				break
 			}
 
+			// Check if adding this stop would exceed 8 hours
+			newDist := clusterDist + bestDist
+			nStops := int32(len(cluster.Machines)) + 1
+			estSecs := int64(newDist/avgSpeedMph*3600) + int64(nStops)*int64(serviceMinutes)*60
+			if estSecs > MaxRouteDurationSecs {
+				break
+			}
+
 			addToCluster(&cluster, listA[bestIdx])
 			assigned[bestIdx] = true
+			clusterDist = newDist
 		}
 
 		clusters = append(clusters, cluster)
 	}
 
-	// Insert List B machines into existing clusters if detour is small
-	insertListB(clusters, listB, maxDetourMiles)
+	insertListB(clusters, listB, maxDetourMiles, avgSpeedMph, serviceMinutes)
 
 	return clusters
 }
@@ -77,7 +91,6 @@ func addToCluster(c *Cluster, m MachineDemand) {
 	for sku, qty := range m.Products {
 		c.TotalDemand[sku] += qty
 	}
-	// Recalculate centroid
 	points := make([][2]float64, len(c.Machines))
 	for i, machine := range c.Machines {
 		points[i] = [2]float64{machine.Lat, machine.Lng}
@@ -85,14 +98,21 @@ func addToCluster(c *Cluster, m MachineDemand) {
 	c.CentroidLat, c.CentroidLng = Centroid(points)
 }
 
-// insertListB adds List B machines to the nearest cluster if the insertion
-// cost (detour) is below the threshold.
-func insertListB(clusters []Cluster, listB []MachineDemand, maxDetourMiles float64) {
+func insertListB(clusters []Cluster, listB []MachineDemand, maxDetourMiles float64,
+	avgSpeedMph float64, serviceMinutes int32) {
+
 	for _, m := range listB {
 		bestCluster := -1
 		bestDetour := maxDetourMiles + 1
 
 		for ci, c := range clusters {
+			nStops := int32(len(c.Machines))
+			estDist := estimateClusterDistance(c.Machines)
+			estSecs := int64(estDist/avgSpeedMph*3600) + int64(nStops)*int64(serviceMinutes)*60
+			if estSecs+int64(serviceMinutes)*60 > MaxRouteDurationSecs {
+				continue
+			}
+
 			if len(c.Machines) < 2 {
 				dist := Haversine(c.CentroidLat, c.CentroidLng, m.Lat, m.Lng)
 				if dist < bestDetour {
@@ -101,7 +121,6 @@ func insertListB(clusters []Cluster, listB []MachineDemand, maxDetourMiles float
 				}
 				continue
 			}
-			// Check insertion cost between each pair of consecutive stops
 			detour := insertionCost(c.Machines, m)
 			if detour < bestDetour {
 				bestDetour = detour
@@ -116,7 +135,17 @@ func insertListB(clusters []Cluster, listB []MachineDemand, maxDetourMiles float
 	}
 }
 
-// insertionCost finds the cheapest place to insert m between existing stops.
+func estimateClusterDistance(machines []MachineDemand) float64 {
+	if len(machines) < 2 {
+		return 0
+	}
+	total := 0.0
+	for i := 0; i < len(machines)-1; i++ {
+		total += Haversine(machines[i].Lat, machines[i].Lng, machines[i+1].Lat, machines[i+1].Lng)
+	}
+	return total
+}
+
 func insertionCost(stops []MachineDemand, m MachineDemand) float64 {
 	best := Haversine(stops[len(stops)-1].Lat, stops[len(stops)-1].Lng, m.Lat, m.Lng)
 	for i := 0; i < len(stops)-1; i++ {
