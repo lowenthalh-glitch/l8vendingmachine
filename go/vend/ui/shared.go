@@ -95,6 +95,7 @@ func RegisterTypes(resources ifs.IResources) {
 	common.RegisterType(resources, &vend.VendRoute{}, &vend.VendRouteList{}, "RouteId")
 	common.RegisterType(resources, &vend.VendDriver{}, &vend.VendDriverList{}, "DriverId")
 	common.RegisterType(resources, &vend.VendDeliveryTruck{}, &vend.VendDeliveryTruckList{}, "TruckId")
+	resources.Registry().Register(&vend.VendRouteOptRequest{})
 
 	// AI Analytics
 	common.RegisterType(resources, &vend.VendForecast{}, &vend.VendForecastList{}, "ForecastId")

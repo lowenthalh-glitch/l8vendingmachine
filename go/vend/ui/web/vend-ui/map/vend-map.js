@@ -172,6 +172,87 @@
         return d.innerHTML;
     }
 
+    var routeColors = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c', '#e67e22', '#34495e'];
+
+    function addRoutes() {
+        query('/10/Route', 'VendRoute', function(items) {
+            // Build a lat/lng lookup from all machine markers already on the map
+            // We need to resolve stop machine IDs to coordinates
+            // First get all fleet machines for coordinate lookup
+            var machineHandler, ok;
+            query('/10/Machine', 'VendFleetMachine', function(machines) {
+                var machineCoords = {};
+                machines.forEach(function(m) {
+                    if (m.locationLat || m.locationLng) {
+                        machineCoords[m.machineId] = [
+                            typeof m.locationLat === 'string' ? parseFloat(m.locationLat) : m.locationLat,
+                            typeof m.locationLng === 'string' ? parseFloat(m.locationLng) : m.locationLng
+                        ];
+                    }
+                });
+                // Also get facility coords
+                query('/10/Facility', 'VendStockingFacility', function(facs) {
+                    var facCoords = {};
+                    facs.forEach(function(f) {
+                        if (f.coordinates) {
+                            facCoords[f.facilityId] = [f.coordinates.latitude, f.coordinates.longitude];
+                        }
+                    });
+                    drawRoutes(items, machineCoords, facCoords);
+                });
+            });
+        });
+    }
+
+    function drawRoutes(routes, machineCoords, facCoords) {
+        routes.forEach(function(route, ri) {
+            if (!route.stops || route.stops.length === 0) return;
+            var color = routeColors[ri % routeColors.length];
+            var points = [];
+
+            route.stops.forEach(function(stop) {
+                var coords = null;
+                if (stop.stopType === 'reload' && stop.facilityId) {
+                    coords = facCoords[stop.facilityId];
+                } else if (stop.machineId) {
+                    coords = machineCoords[stop.machineId];
+                }
+                if (!coords) return;
+
+                points.push(coords);
+
+                // Add stop marker
+                var markerColor = stop.serviceUrgency === 'high' ? '#e74c3c' :
+                    stop.serviceUrgency === 'reload' ? '#3498db' : '#f1c40f';
+                var icon = stop.stopType === 'reload' ?
+                    L.divIcon({
+                        className: '',
+                        html: '<div style="width:12px;height:12px;background:' + markerColor +
+                              ';border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.3);"></div>',
+                        iconSize: [12, 12], iconAnchor: [6, 6], popupAnchor: [0, -8]
+                    }) :
+                    colorIcon(markerColor);
+
+                var label = stop.stopType === 'reload' ?
+                    'Reload at facility' :
+                    'Stop #' + stop.stopOrder + ': ' + esc(stop.machineId);
+
+                L.marker(coords, { icon: icon }).addTo(map)
+                    .bindPopup('<b>' + esc(route.name) + '</b><br>' + label +
+                        '<br>Urgency: ' + esc(stop.serviceUrgency || ''));
+            });
+
+            // Draw polyline
+            if (points.length >= 2) {
+                L.polyline(points, { color: color, weight: 3, opacity: 0.7, dashArray: '8,4' }).addTo(map)
+                    .bindPopup('<b>' + esc(route.name) + '</b><br>' +
+                        'Distance: ' + (route.totalDistance ? route.totalDistance.toFixed(1) + ' mi' : '-') + '<br>' +
+                        'Duration: ' + (route.totalDuration || 0) + ' min<br>' +
+                        'Fuel: $' + (route.estimatedFuelCost ? route.estimatedFuelCost.toFixed(2) : '-'));
+            }
+        });
+    }
+
     window.initializeMap = function() {
         var container = document.getElementById('vend-map');
         if (!container) return;
@@ -190,6 +271,7 @@
             addMachines();
             addTrucks();
             addDrivers();
+            addRoutes();
         });
     };
 })();

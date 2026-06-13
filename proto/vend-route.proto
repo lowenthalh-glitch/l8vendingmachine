@@ -38,6 +38,8 @@ message VendRoute {
     repeated VendRouteStop stops = 12;   // Child: embedded route stops
     map<string, string> custom_fields = 13;
     l8common.AuditInfo audit_info = 14;
+    string facility_id = 15;             // cross-ref: VendStockingFacility (primary facility)
+    double estimated_fuel_cost = 16;     // distance / MPG * fuel price
 }
 
 message VendRouteList {
@@ -54,6 +56,8 @@ message VendRouteStop {
     string status = 5;
     string restock_order_id = 6;         // cross-ref: VendRestockOrder
     string service_urgency = 7;
+    string stop_type = 8;               // "machine" or "reload"
+    string facility_id = 9;             // Only set for reload stops
 }
 
 // @PrimeObject
@@ -164,4 +168,21 @@ message VendTruckStockItem {
 message VendDeliveryTruckList {
     repeated VendDeliveryTruck list = 1;
     l8api.L8MetaData metadata = 2;
+}
+
+// Command message for on-demand route optimization (no List type — not a CRUD entity)
+message VendRouteOptRequest {
+    // Input
+    int64 planned_date = 1;              // Unix timestamp, default = tomorrow
+    int64 start_time = 2;               // Unix timestamp for departure (for traffic query)
+    double max_route_distance = 3;       // Max miles per route, default = 50
+    double max_detour_distance = 4;      // Max detour for List B machines, default = 3
+    int32 reload_time_minutes = 5;       // Time to reload at facility, default = 30
+
+    // Output (populated by optimizer, returned in POST response)
+    repeated string generated_route_ids = 10;
+    int32 generated_count = 11;
+    int32 list_a_count = 12;             // Machines that needed immediate restock
+    int32 list_b_added = 13;             // "Can wait" machines added opportunistically
+    string error = 14;                   // Error message if generation failed
 }
