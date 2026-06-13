@@ -81,12 +81,14 @@ func GenerateRoutes(nic ifs.IVNic, req *vend.VendRouteOptRequest) ([]*vend.VendR
 	var generatedRoutes []*vend.VendRoute
 	listBAdded := 0
 
+	skippedClusters := 0
 	for i, cluster := range clusters {
 		// Step 4: Assign truck + driver
 		assignment, err := AssignResources(&cluster, allTrucks, allDrivers,
 			dayOfWeek, assignedTrucks, nic)
 		if err != nil {
 			nic.Resources().Logger().Info("Route optimizer: skipping cluster: ", err.Error())
+			skippedClusters++
 			continue
 		}
 
@@ -114,6 +116,12 @@ func GenerateRoutes(nic ifs.IVNic, req *vend.VendRouteOptRequest) ([]*vend.VendR
 
 	req.GeneratedCount = int32(len(generatedRoutes))
 	req.ListBAdded = int32(listBAdded)
+
+	if len(generatedRoutes) == 0 && skippedClusters > 0 {
+		dayName := time.Unix(plannedDate, 0).Weekday().String()
+		req.Error = fmt.Sprintf("No drivers available on %s. %d clusters had %d urgent machines but no driver/truck match.",
+			dayName, skippedClusters, len(listA))
+	}
 
 	return generatedRoutes, nil
 }

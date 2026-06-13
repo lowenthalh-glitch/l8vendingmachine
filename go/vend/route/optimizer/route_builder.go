@@ -97,48 +97,131 @@ func buildTruckStockMap(truck *vend.VendDeliveryTruck) map[string]int32 {
 func insertFacilityReloads(machines []MachineDemand, truckStock map[string]int32,
 	facilities []*vend.VendStockingFacility, config *RouteConfig) []RouteStop {
 
-	var stops []RouteStop
+	// Phase 1: Walk through machines in order. Serve all that current stock allows.
+	// Accumulate the ones we can't serve into a "deferred" list.
+	var served []RouteStop
+	var deferred []MachineDemand
 	curLat, curLng := 0.0, 0.0
 	if len(machines) > 0 {
 		curLat, curLng = machines[0].Lat, machines[0].Lng
 	}
 
 	for _, m := range machines {
-		// Check if truck has enough stock for this machine
-		if !hasStock(truckStock, m.Products) {
-			// Insert facility reload
-			fac := findNearestOpenFacility(curLat, curLng, facilities)
-			if fac != nil {
-				stops = append(stops, RouteStop{
-					FacilityId: fac.FacilityId,
-					Lat:        fac.Coordinates.Latitude,
-					Lng:        fac.Coordinates.Longitude,
-					Urgency:    "reload",
-					IsReload:   true,
-				})
-				reloadTruckFromFacility(truckStock, fac)
-				curLat, curLng = fac.Coordinates.Latitude, fac.Coordinates.Longitude
-			}
+		if hasStock(truckStock, m.Products) {
+			deductStock(truckStock, m.Products)
+			served = append(served, RouteStop{
+				MachineId: m.MachineId, Lat: m.Lat, Lng: m.Lng,
+				Urgency: m.Urgency, Products: m.Products,
+			})
+			curLat, curLng = m.Lat, m.Lng
+		} else {
+			deferred = append(deferred, m)
 		}
+	}
 
-		// Deduct from truck stock
-		for sku, qty := range m.Products {
-			truckStock[sku] -= qty
-			if truckStock[sku] < 0 {
-				truckStock[sku] = 0
-			}
+	if len(deferred) == 0 {
+		return served // No reload needed — truck had enough stock
+	}
+
+	// Phase 2: Need to reload. Find the optimal facility that minimizes total detour.
+	// The reload goes between the last served stop and the first deferred stop.
+	// Evaluate each facility: cost = (lastServed → facility) + (facility → firstDeferred)
+	// vs direct (lastServed → firstDeferred).
+	// Pick the facility with the minimum added cost.
+	var stops []RouteStop
+	stops = append(stops, served...)
+
+	for len(deferred) > 0 {
+		// Find optimal facility for reload
+		fac := findOptimalFacility(curLat, curLng, deferred, facilities)
+		if fac == nil {
+			break
 		}
 
 		stops = append(stops, RouteStop{
-			MachineId: m.MachineId,
-			Lat:       m.Lat,
-			Lng:       m.Lng,
-			Urgency:   m.Urgency,
-			Products:  m.Products,
+			FacilityId: fac.FacilityId,
+			Lat:        fac.Coordinates.Latitude,
+			Lng:        fac.Coordinates.Longitude,
+			Urgency:    "reload",
+			IsReload:   true,
 		})
-		curLat, curLng = m.Lat, m.Lng
+		reloadTruckFromFacility(truckStock, fac)
+		curLat, curLng = fac.Coordinates.Latitude, fac.Coordinates.Longitude
+
+		// Serve as many deferred machines as possible (nearest first)
+		var stillDeferred []MachineDemand
+		for len(deferred) > 0 {
+			bestIdx := -1
+			bestDist := 999999.0
+			for i, m := range deferred {
+				if hasStock(truckStock, m.Products) {
+					d := Haversine(curLat, curLng, m.Lat, m.Lng)
+					if d < bestDist {
+						bestDist = d
+						bestIdx = i
+					}
+				}
+			}
+			if bestIdx == -1 {
+				// Remaining deferred can't be served — need another reload
+				stillDeferred = deferred
+				break
+			}
+			m := deferred[bestIdx]
+			deductStock(truckStock, m.Products)
+			stops = append(stops, RouteStop{
+				MachineId: m.MachineId, Lat: m.Lat, Lng: m.Lng,
+				Urgency: m.Urgency, Products: m.Products,
+			})
+			curLat, curLng = m.Lat, m.Lng
+			deferred = append(deferred[:bestIdx], deferred[bestIdx+1:]...)
+		}
+		deferred = stillDeferred
 	}
+
 	return stops
+}
+
+// findOptimalFacility evaluates all facilities and picks the one that minimizes
+// the total detour: (current position → facility → nearest deferred machine).
+func findOptimalFacility(curLat, curLng float64, deferred []MachineDemand,
+	facilities []*vend.VendStockingFacility) *vend.VendStockingFacility {
+
+	var best *vend.VendStockingFacility
+	bestCost := 999999.0
+
+	// Find the centroid of deferred machines (where we want to end up after reload)
+	points := make([][2]float64, len(deferred))
+	for i, m := range deferred {
+		points[i] = [2]float64{m.Lat, m.Lng}
+	}
+	deferredLat, deferredLng := Centroid(points)
+
+	for _, f := range facilities {
+		if f.Status != vend.VendFacilityStatus_VEND_FACILITY_STATUS_ACTIVE {
+			continue
+		}
+		if f.Coordinates == nil {
+			continue
+		}
+		fLat, fLng := f.Coordinates.Latitude, f.Coordinates.Longitude
+		// Cost = distance to facility + distance from facility to deferred centroid
+		cost := Haversine(curLat, curLng, fLat, fLng) + Haversine(fLat, fLng, deferredLat, deferredLng)
+		if cost < bestCost {
+			bestCost = cost
+			best = f
+		}
+	}
+	return best
+}
+
+func deductStock(stock map[string]int32, products map[string]int32) {
+	for sku, qty := range products {
+		stock[sku] -= qty
+		if stock[sku] < 0 {
+			stock[sku] = 0
+		}
+	}
 }
 
 func hasStock(truckStock map[string]int32, demand map[string]int32) bool {
