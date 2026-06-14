@@ -185,6 +185,7 @@ message VendRouteOptRequest {
     int32 reload_time_minutes = 5;       // Time to reload at facility, default = 30
     int32 break_after_minutes = 6;       // Insert break after this many minutes of driving (default 240 = 4 hours)
     int32 break_duration_minutes = 7;    // Break duration (default 30)
+    string balance_mode = 8;             // "stops", "duration", or "" (none/default)
 
     // Output (populated by optimizer, returned in POST response)
     repeated string generated_route_ids = 10;

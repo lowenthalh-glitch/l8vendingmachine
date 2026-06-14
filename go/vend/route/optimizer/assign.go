@@ -126,6 +126,10 @@ func assignMachines(machines []MachineDemand, driverRoutes []DriverRoute, config
 				startDist, _ := router.Distance(m.Lat, m.Lng, dr.StartLat, dr.StartLng)
 				endDist, _ := router.Distance(m.Lat, m.Lng, dr.EndLat, dr.EndLng)
 				score := 0.6*startDist + 0.4*endDist
+				// Priority weighting: urgent machines get a 20% distance bonus
+				if m.Urgency == "high" {
+					score *= 0.8
+				}
 				if score < bestScore {
 					bestScore = score
 					bestMachine = mi

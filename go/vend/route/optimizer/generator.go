@@ -83,6 +83,9 @@ func GenerateRoutes(nic ifs.IVNic, req *vend.VendRouteOptRequest) ([]*vend.VendR
 		return nil, nil
 	}
 
+	// Step 2.5: Balance workload across drivers
+	BalanceWorkload(driverRoutes, req.BalanceMode, config)
+
 	var generatedRoutes []*vend.VendRoute
 	listBAdded := 0
 
