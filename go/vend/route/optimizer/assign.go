@@ -5,8 +5,6 @@
 package optimizer
 
 import (
-	"fmt"
-
 	"github.com/saichler/l8types/go/ifs"
 	"github.com/saichler/l8vendingmachine/go/types/vend"
 	vendcommon "github.com/saichler/l8vendingmachine/go/vend/common"
@@ -15,68 +13,212 @@ import (
 	"github.com/saichler/l8vendingmachine/go/vend/warehouse/facilities"
 )
 
-// Assignment holds the matched truck and driver for a cluster.
-type Assignment struct {
-	TruckId  string
-	DriverId string
-	Truck    *vend.VendDeliveryTruck
+const MaxRouteDurationSecs = 8 * 3600 // 8 hours max per route
+
+// DriverRoute holds a driver's assignment: who they are, their truck, locations, and assigned machines.
+type DriverRoute struct {
 	Driver   *vend.VendDriver
+	Truck    *vend.VendDeliveryTruck
+	Schedule *vend.VendDriverScheduleDay
 	StartLat float64
 	StartLng float64
+	EndLat   float64
+	EndLng   float64
+	Machines []MachineDemand
 }
 
-// licenseRequired returns the minimum license class for a truck type.
-func licenseRequired(truckType vend.VendTruckType) vend.VendLicenseClass {
-	switch truckType {
-	case vend.VendTruckType_VEND_TRUCK_TYPE_BOX_TRUCK,
-		vend.VendTruckType_VEND_TRUCK_TYPE_REFRIGERATED:
-		return vend.VendLicenseClass_VEND_LICENSE_CLASS_B
-	default:
-		return vend.VendLicenseClass_VEND_LICENSE_CLASS_C
+// AssignMachinesToDrivers assigns machines to drivers based on geographic proximity
+// to each driver's start and end location. Replaces cluster-then-assign pattern.
+func AssignMachinesToDrivers(listA, listB []MachineDemand,
+	allTrucks []*vend.VendDeliveryTruck, allDrivers []*vend.VendDriver,
+	allFacilities []*vend.VendStockingFacility,
+	dayOfWeek vend.VendDayOfWeek, maxDetourMiles float64,
+	config *RouteConfig, nic ifs.IVNic) []DriverRoute {
+
+	// Build available driver routes (driver+truck pairs that work on this day)
+	var driverRoutes []DriverRoute
+	usedTrucks := make(map[string]bool)
+
+	for _, driver := range allDrivers {
+		if !driver.IsActive {
+			continue
+		}
+		sched := findScheduleDay(driver.Schedule, dayOfWeek)
+		if sched == nil {
+			continue
+		}
+		truck := findTruckForDriver(driver, allTrucks, usedTrucks)
+		if truck == nil {
+			continue
+		}
+		usedTrucks[truck.TruckId] = true
+
+		startLat, startLng := resolveStartLocation(driver, sched, nic)
+		endLat, endLng := resolveEndLocation(driver, sched, truck, allFacilities, startLat, startLng, nic)
+
+		driverRoutes = append(driverRoutes, DriverRoute{
+			Driver: driver, Truck: truck, Schedule: sched,
+			StartLat: startLat, StartLng: startLng,
+			EndLat: endLat, EndLng: endLng,
+		})
+	}
+
+	if len(driverRoutes) == 0 {
+		return nil
+	}
+
+	// Assign List A machines to nearest driver (60% start proximity, 40% end proximity)
+	assignMachines(listA, driverRoutes, config)
+
+	// Insert List B machines if within detour threshold
+	for _, m := range listB {
+		bestDriver := -1
+		bestCost := maxDetourMiles + 1
+		for di, dr := range driverRoutes {
+			if len(dr.Machines) == 0 {
+				continue
+			}
+			cost := insertionCostForDriver(m, dr)
+			if cost < bestCost {
+				bestCost = cost
+				bestDriver = di
+			}
+		}
+		if bestDriver >= 0 {
+			m.Urgency = "low"
+			driverRoutes[bestDriver].Machines = append(driverRoutes[bestDriver].Machines, m)
+		}
+	}
+
+	// Filter out drivers with no machines
+	var result []DriverRoute
+	for _, dr := range driverRoutes {
+		if len(dr.Machines) > 0 {
+			result = append(result, dr)
+		}
+	}
+	return result
+}
+
+func assignMachines(machines []MachineDemand, driverRoutes []DriverRoute, config *RouteConfig) {
+	assigned := make([]bool, len(machines))
+
+	for {
+		// Find next unassigned machine
+		bestMachine := -1
+		bestDriver := -1
+		bestScore := 999999.0
+
+		for mi, m := range machines {
+			if assigned[mi] {
+				continue
+			}
+			for di, dr := range driverRoutes {
+				// Check 8-hour cap
+				estDuration := estimateRouteDuration(dr.Machines, config)
+				if estDuration+int64(config.ServiceMinutes)*60 > MaxRouteDurationSecs {
+					continue
+				}
+				score := 0.6*Haversine(m.Lat, m.Lng, dr.StartLat, dr.StartLng) +
+					0.4*Haversine(m.Lat, m.Lng, dr.EndLat, dr.EndLng)
+				if score < bestScore {
+					bestScore = score
+					bestMachine = mi
+					bestDriver = di
+				}
+			}
+		}
+
+		if bestMachine < 0 {
+			break // All assigned or no capacity
+		}
+
+		assigned[bestMachine] = true
+		driverRoutes[bestDriver].Machines = append(driverRoutes[bestDriver].Machines, machines[bestMachine])
 	}
 }
 
-func licenseCovers(driverClass, required vend.VendLicenseClass) bool {
-	return driverClass >= required
+func estimateRouteDuration(machines []MachineDemand, config *RouteConfig) int64 {
+	if len(machines) < 2 {
+		return int64(len(machines)) * int64(config.ServiceMinutes) * 60
+	}
+	dist := 0.0
+	for i := 0; i < len(machines)-1; i++ {
+		dist += Haversine(machines[i].Lat, machines[i].Lng, machines[i+1].Lat, machines[i+1].Lng)
+	}
+	travelSecs := int64(dist / config.AvgSpeedMph * 3600)
+	serviceSecs := int64(len(machines)) * int64(config.ServiceMinutes) * 60
+	return travelSecs + serviceSecs
 }
 
-// AssignResources matches a cluster to an available truck and driver.
-func AssignResources(cluster *Cluster, allTrucks []*vend.VendDeliveryTruck,
-	allDrivers []*vend.VendDriver, dayOfWeek vend.VendDayOfWeek,
-	assignedTrucks map[string]bool, nic ifs.IVNic) (*Assignment, error) {
+func insertionCostForDriver(m MachineDemand, dr DriverRoute) float64 {
+	if len(dr.Machines) == 0 {
+		return Haversine(dr.StartLat, dr.StartLng, m.Lat, m.Lng)
+	}
+	// Cost of adding m after the last machine
+	last := dr.Machines[len(dr.Machines)-1]
+	return Haversine(last.Lat, last.Lng, m.Lat, m.Lng)
+}
 
+func findTruckForDriver(driver *vend.VendDriver, allTrucks []*vend.VendDeliveryTruck, used map[string]bool) *vend.VendDeliveryTruck {
 	for _, truck := range allTrucks {
+		if truck.TruckId != driver.TruckId {
+			continue
+		}
 		if truck.Status != vend.VendTruckStatus_VEND_TRUCK_STATUS_ACTIVE {
 			continue
 		}
-		if assignedTrucks[truck.TruckId] {
+		if used[truck.TruckId] {
 			continue
 		}
-		reqLicense := licenseRequired(truck.Type)
+		if !licenseCovers(driver.LicenseClass, licenseRequired(truck.Type)) {
+			continue
+		}
+		return truck
+	}
+	return nil
+}
 
-		for _, driver := range allDrivers {
-			if !driver.IsActive || driver.TruckId != truck.TruckId {
-				continue
-			}
-			if !licenseCovers(driver.LicenseClass, reqLicense) {
-				continue
-			}
-			schedEntry := findScheduleDay(driver.Schedule, dayOfWeek)
-			if schedEntry == nil {
-				continue
-			}
-			startLat, startLng := resolveStartLocation(driver, schedEntry, nic)
+// resolveEndLocation resolves the driver's end-of-day location using the fallback chain:
+// 1. schedule.endLocationId → VendLocation coordinates
+// 2. driver home address → currentLatitude/currentLongitude
+// 3. truck homeDepotId → facility coordinates
+// 4. driver start location (round trip)
+func resolveEndLocation(driver *vend.VendDriver, sched *vend.VendDriverScheduleDay,
+	truck *vend.VendDeliveryTruck, allFacilities []*vend.VendStockingFacility,
+	startLat, startLng float64, nic ifs.IVNic) (float64, float64) {
 
-			assignedTrucks[truck.TruckId] = true
-			return &Assignment{
-				TruckId: truck.TruckId, DriverId: driver.DriverId,
-				Truck: truck, Driver: driver,
-				StartLat: startLat, StartLng: startLng,
-			}, nil
+	// 1. Schedule end location
+	if sched.EndLocationId != "" {
+		lat, lng := resolveLocationCoords(sched.EndLocationId, nic)
+		if lat != 0 || lng != 0 {
+			return lat, lng
 		}
 	}
-	return nil, fmt.Errorf("no available truck+driver for cluster at (%.4f, %.4f)",
-		cluster.CentroidLat, cluster.CentroidLng)
+	// 2. Driver home/current position
+	if driver.CurrentLatitude != 0 || driver.CurrentLongitude != 0 {
+		return driver.CurrentLatitude, driver.CurrentLongitude
+	}
+	// 3. Truck home depot facility
+	if truck.HomeDepotId != "" {
+		for _, f := range allFacilities {
+			if f.FacilityId == truck.HomeDepotId && f.Coordinates != nil {
+				return f.Coordinates.Latitude, f.Coordinates.Longitude
+			}
+		}
+	}
+	// 4. Round trip to start
+	return startLat, startLng
+}
+
+func resolveLocationCoords(locationId string, nic ifs.IVNic) (float64, float64) {
+	results, err := vendcommon.GetEntities("Location", byte(10), &vend.VendLocation{LocationId: locationId}, nic)
+	if err == nil && len(results) > 0 {
+		if loc, ok := results[0].(*vend.VendLocation); ok && loc.Coordinates != nil {
+			return loc.Coordinates.Latitude, loc.Coordinates.Longitude
+		}
+	}
+	return 0, 0
 }
 
 func findScheduleDay(schedule []*vend.VendDriverScheduleDay, day vend.VendDayOfWeek) *vend.VendDriverScheduleDay {
@@ -90,17 +232,29 @@ func findScheduleDay(schedule []*vend.VendDriverScheduleDay, day vend.VendDayOfW
 
 func resolveStartLocation(driver *vend.VendDriver, sched *vend.VendDriverScheduleDay, nic ifs.IVNic) (float64, float64) {
 	if sched.StartLocationId != "" {
-		results, err := vendcommon.GetEntities("Location", byte(10), &vend.VendLocation{LocationId: sched.StartLocationId}, nic)
-		if err == nil && len(results) > 0 {
-			if loc, ok := results[0].(*vend.VendLocation); ok && loc.Coordinates != nil {
-				return loc.Coordinates.Latitude, loc.Coordinates.Longitude
-			}
+		lat, lng := resolveLocationCoords(sched.StartLocationId, nic)
+		if lat != 0 || lng != 0 {
+			return lat, lng
 		}
 	}
 	if driver.CurrentLatitude != 0 || driver.CurrentLongitude != 0 {
 		return driver.CurrentLatitude, driver.CurrentLongitude
 	}
 	return 0, 0
+}
+
+func licenseRequired(truckType vend.VendTruckType) vend.VendLicenseClass {
+	switch truckType {
+	case vend.VendTruckType_VEND_TRUCK_TYPE_BOX_TRUCK,
+		vend.VendTruckType_VEND_TRUCK_TYPE_REFRIGERATED:
+		return vend.VendLicenseClass_VEND_LICENSE_CLASS_B
+	default:
+		return vend.VendLicenseClass_VEND_LICENSE_CLASS_C
+	}
+}
+
+func licenseCovers(driverClass, required vend.VendLicenseClass) bool {
+	return driverClass >= required
 }
 
 // LoadAllTrucks fetches all delivery trucks.

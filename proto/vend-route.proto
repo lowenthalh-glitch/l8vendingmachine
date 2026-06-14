@@ -102,6 +102,7 @@ message VendDriverScheduleDay {
     VendDayOfWeek day = 1;
     string start_time = 2;               // "HH:MM" format (e.g., "07:30")
     string start_location_id = 3;        // cross-ref: VendLocation (blank = home address)
+    string end_location_id = 4;          // cross-ref: VendLocation (blank = home address)
 }
 
 message VendDriverList {

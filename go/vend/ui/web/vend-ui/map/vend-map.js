@@ -163,14 +163,22 @@
             var points = [];
             route.stops.forEach(function(stop) {
                 var coords = null;
-                if (stop.stopType === 'reload' && stop.facilityId) coords = facCoords[stop.facilityId];
-                else if (stop.machineId) coords = machineCoords[stop.machineId];
+                if (stop.stopType === 'end') {
+                    // End-of-day stop — use last known point + offset or skip if no coords
+                    // The stop has no machineId/facilityId, coords come from the route data
+                    return; // Will be drawn as the polyline endpoint
+                } else if (stop.stopType === 'reload' && stop.facilityId) {
+                    coords = facCoords[stop.facilityId];
+                } else if (stop.machineId) {
+                    coords = machineCoords[stop.machineId];
+                }
                 if (!coords) return;
                 points.push(coords);
                 var mc = stop.serviceUrgency==='high' ? '#e74c3c' : stop.serviceUrgency==='reload' ? '#3498db' : '#f1c40f';
+                var label = stop.stopType==='reload' ? ' (Reload)' : ': '+esc(stop.machineName || stop.machineId);
                 L.marker(coords, { icon: colorIcon(mc, 10) }).addTo(lg)
-                    .bindPopup('<b>'+esc(route.name)+'</b><br>Stop #'+stop.stopOrder+
-                        (stop.stopType==='reload' ? ' (Reload)' : ': '+esc(stop.machineId))+
+                    .bindPopup('<b>'+esc(route.name)+'</b><br>Stop #'+stop.stopOrder+ label +
+                        '<br>'+esc(stop.locationAddress||'')+' '+esc(stop.locationCity||'')+
                         '<br>Urgency: '+esc(stop.serviceUrgency||''));
             });
             if (points.length >= 2) {

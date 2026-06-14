@@ -16,14 +16,15 @@ type RouteConfig struct {
 	FuelPriceGal   float64
 }
 
-// RouteStop represents a stop in the built route (machine or facility reload).
+// RouteStop represents a stop in the built route (machine, facility reload, or end-of-day).
 type RouteStop struct {
 	MachineId  string
 	FacilityId string
 	Lat        float64
 	Lng        float64
-	Urgency    string // "high", "low", "reload"
+	Urgency    string // "high", "low", "reload", "end"
 	IsReload   bool
+	IsEnd      bool
 	Products   map[string]int32 // sku → qty to restock at this stop
 }
 
@@ -35,31 +36,70 @@ type BuiltRoute struct {
 	TruckMPG float64
 }
 
-// BuildRoute orders stops, inserts facility reloads when truck stock depletes,
-// and applies 2-opt improvement.
-func BuildRoute(cluster *Cluster, assignment *Assignment,
+// BuildRouteForDriver orders stops with end-location awareness, inserts facility
+// reloads (preferring home depot near end), and applies 2-opt including the end leg.
+func BuildRouteForDriver(dr *DriverRoute,
 	facilities []*vend.VendStockingFacility, config *RouteConfig) *BuiltRoute {
 
-	// Step 1: Order machines by nearest-neighbor from driver start
-	ordered := nearestNeighborOrder(cluster.Machines, assignment.StartLat, assignment.StartLng)
+	// Step 1: Order machines by nearest-neighbor, anchoring last stop near end location
+	ordered := nearestNeighborWithEnd(dr.Machines, dr.StartLat, dr.StartLng, dr.EndLat, dr.EndLng)
 
-	// Step 2: Walk through ordered stops, track stock, insert facility reloads
-	truckStock := buildTruckStockMap(assignment.Truck)
-	stops := insertFacilityReloads(ordered, truckStock, facilities, config)
+	// Step 2: 2-opt including the end-location leg
+	improved := twoOptWithEnd(ordered, dr.EndLat, dr.EndLng)
 
-	// Step 3: Apply 2-opt on machine stops only, then re-insert facility reloads
-	machineStops := extractMachineStops(stops)
-	improved := twoOpt(machineStops)
-	truckStock = buildTruckStockMap(assignment.Truck) // reset stock
-	stops = insertFacilityReloads(improved, truckStock, facilities, config)
+	// Step 3: Insert facility reloads (prefer home depot near end of route)
+	truckStock := buildTruckStockMap(dr.Truck)
+	stops := insertFacilityReloads(improved, truckStock, facilities, config)
 
-	// Step 4: Build legs and compute metrics
-	legs := buildLegs(assignment.StartLat, assignment.StartLng, stops, config.AvgSpeedMph)
-	mpg := assignment.Truck.MilesPerGallon
+	// Step 4: Prefer home depot for last reload
+	preferHomeDepotForLastReload(stops, dr.Truck, facilities)
+
+	// Step 5: Add end-of-day stop
+	stops = append(stops, RouteStop{
+		Lat: dr.EndLat, Lng: dr.EndLng,
+		Urgency: "end", IsReload: false, IsEnd: true,
+	})
+
+	// Step 6: Build legs and compute metrics (includes end leg)
+	legs := buildLegs(dr.StartLat, dr.StartLng, stops, config.AvgSpeedMph)
+	mpg := dr.Truck.MilesPerGallon
 	metrics := ComputeRouteMetrics(legs, 0, mpg, config.FuelPriceGal,
 		config.ServiceMinutes, config.ReloadMinutes)
 
 	return &BuiltRoute{Stops: stops, Legs: legs, Metrics: metrics, TruckMPG: mpg}
+}
+
+// nearestNeighborWithEnd: save machine nearest to end location as last stop,
+// then nearest-neighbor the rest from start, then append the saved last stop.
+func nearestNeighborWithEnd(machines []MachineDemand, startLat, startLng, endLat, endLng float64) []MachineDemand {
+	if len(machines) <= 1 {
+		return machines
+	}
+
+	// Find machine nearest to end location — reserve it as last stop
+	lastIdx := 0
+	bestEndDist := Haversine(machines[0].Lat, machines[0].Lng, endLat, endLng)
+	for i := 1; i < len(machines); i++ {
+		d := Haversine(machines[i].Lat, machines[i].Lng, endLat, endLng)
+		if d < bestEndDist {
+			bestEndDist = d
+			lastIdx = i
+		}
+	}
+	lastMachine := machines[lastIdx]
+	remaining := make([]MachineDemand, 0, len(machines)-1)
+	for i, m := range machines {
+		if i != lastIdx {
+			remaining = append(remaining, m)
+		}
+	}
+
+	// Nearest-neighbor the rest from start
+	ordered := nearestNeighborOrder(remaining, startLat, startLng)
+
+	// Append the reserved last stop
+	ordered = append(ordered, lastMachine)
+	return ordered
 }
 
 func nearestNeighborOrder(machines []MachineDemand, startLat, startLng float64) []MachineDemand {
@@ -284,4 +324,105 @@ func buildLegs(startLat, startLng float64, stops []RouteStop, avgSpeed float64) 
 		curLat, curLng = s.Lat, s.Lng
 	}
 	return legs
+}
+
+// twoOptWithEnd runs 2-opt including the end-location leg in distance calculations.
+func twoOptWithEnd(stops []MachineDemand, endLat, endLng float64) []MachineDemand {
+	if len(stops) < 4 {
+		return stops
+	}
+	improved := make([]MachineDemand, len(stops))
+	copy(improved, stops)
+
+	totalDist := func(s []MachineDemand) float64 {
+		d := 0.0
+		for i := 0; i < len(s)-1; i++ {
+			d += Haversine(s[i].Lat, s[i].Lng, s[i+1].Lat, s[i+1].Lng)
+		}
+		// Include end-location leg
+		if len(s) > 0 {
+			last := s[len(s)-1]
+			d += Haversine(last.Lat, last.Lng, endLat, endLng)
+		}
+		return d
+	}
+
+	changed := true
+	for changed {
+		changed = false
+		bestDist := totalDist(improved)
+		for i := 0; i < len(improved)-2; i++ {
+			for j := i + 2; j < len(improved); j++ {
+				candidate := make([]MachineDemand, len(improved))
+				copy(candidate, improved)
+				reverseSegmentDemand(candidate, i+1, j)
+				d := totalDist(candidate)
+				if d < bestDist-0.01 {
+					copy(improved, candidate)
+					bestDist = d
+					changed = true
+				}
+			}
+		}
+	}
+	return improved
+}
+
+func reverseSegmentDemand(stops []MachineDemand, i, j int) {
+	for i < j {
+		stops[i], stops[j] = stops[j], stops[i]
+		i++
+		j--
+	}
+}
+
+// preferHomeDepotForLastReload checks the last reload stop — if the truck's home depot
+// is a facility and is within 2× the distance of the current reload, swap it.
+func preferHomeDepotForLastReload(stops []RouteStop, truck *vend.VendDeliveryTruck,
+	facilities []*vend.VendStockingFacility) {
+
+	if truck.HomeDepotId == "" {
+		return
+	}
+	// Find last reload stop
+	lastReloadIdx := -1
+	for i := len(stops) - 1; i >= 0; i-- {
+		if stops[i].IsReload {
+			lastReloadIdx = i
+			break
+		}
+	}
+	if lastReloadIdx < 0 {
+		return
+	}
+	if stops[lastReloadIdx].FacilityId == truck.HomeDepotId {
+		return // Already at home depot
+	}
+
+	// Find home depot facility
+	var homeDepot *vend.VendStockingFacility
+	for _, f := range facilities {
+		if f.FacilityId == truck.HomeDepotId && f.Status == vend.VendFacilityStatus_VEND_FACILITY_STATUS_ACTIVE {
+			homeDepot = f
+			break
+		}
+	}
+	if homeDepot == nil || homeDepot.Coordinates == nil {
+		return
+	}
+
+	// Compare distances: current reload vs home depot from the previous stop
+	prevLat, prevLng := stops[lastReloadIdx].Lat, stops[lastReloadIdx].Lng
+	if lastReloadIdx > 0 {
+		prevLat, prevLng = stops[lastReloadIdx-1].Lat, stops[lastReloadIdx-1].Lng
+	}
+	currentDist := Haversine(prevLat, prevLng, stops[lastReloadIdx].Lat, stops[lastReloadIdx].Lng)
+	homeDepotDist := Haversine(prevLat, prevLng, homeDepot.Coordinates.Latitude, homeDepot.Coordinates.Longitude)
+
+	// Swap if home depot is within 2× the distance
+	if homeDepotDist <= currentDist*2 {
+		stops[lastReloadIdx].FacilityId = homeDepot.FacilityId
+		stops[lastReloadIdx].Lat = homeDepot.Coordinates.Latitude
+		stops[lastReloadIdx].Lng = homeDepot.Coordinates.Longitude
+	}
 }

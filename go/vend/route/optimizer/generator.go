@@ -34,11 +34,7 @@ func GenerateRoutes(nic ifs.IVNic, req *vend.VendRouteOptRequest) ([]*vend.VendR
 	defer generateMtx.Unlock()
 
 	config := buildConfig(req)
-	maxDist := DefaultMaxRouteDist
 	maxDetour := DefaultMaxDetour
-	if req.MaxRouteDistance > 0 {
-		maxDist = req.MaxRouteDistance
-	}
 	if req.MaxDetourDistance > 0 {
 		maxDetour = req.MaxDetourDistance
 	}
@@ -54,12 +50,6 @@ func GenerateRoutes(nic ifs.IVNic, req *vend.VendRouteOptRequest) ([]*vend.VendR
 	}
 
 	req.ListACount = int32(len(listA))
-
-	// Step 2-3: Cluster machines
-	clusters := ClusterMachines(listA, listB, maxDist, maxDetour, config.AvgSpeedMph, config.ServiceMinutes)
-	if len(clusters) == 0 {
-		return nil, nil
-	}
 
 	// Load resources
 	allTrucks := LoadAllTrucks(nic)
@@ -77,38 +67,36 @@ func GenerateRoutes(nic ifs.IVNic, req *vend.VendRouteOptRequest) ([]*vend.VendR
 		startTime = plannedDate
 	}
 
-	assignedTrucks := make(map[string]bool)
+	// Step 2: Assign machines to drivers by geographic proximity
+	driverRoutes := AssignMachinesToDrivers(listA, listB, allTrucks, allDrivers,
+		allFacilities, dayOfWeek, maxDetour, config, nic)
+
+	if len(driverRoutes) == 0 {
+		dayName := time.Unix(plannedDate, 0).Weekday().String()
+		req.Error = fmt.Sprintf("No drivers available on %s with %d urgent machines.", dayName, len(listA))
+		return nil, nil
+	}
+
 	var generatedRoutes []*vend.VendRoute
 	listBAdded := 0
 
-	skippedClusters := 0
-	for i, cluster := range clusters {
-		// Step 4: Assign truck + driver
-		assignment, err := AssignResources(&cluster, allTrucks, allDrivers,
-			dayOfWeek, assignedTrucks, nic)
-		if err != nil {
-			nic.Resources().Logger().Info("Route optimizer: skipping cluster: ", err.Error())
-			skippedClusters++
-			continue
-		}
+	for i, dr := range driverRoutes {
+		// Step 3: Build route with end-location awareness + facility reloads
+		built := BuildRouteForDriver(&dr, allFacilities, config)
 
-		// Step 5: Build route with dynamic facility reloads
-		built := BuildRoute(&cluster, assignment, allFacilities, config)
-
-		// Step 6: Refine with traffic
+		// Step 4: Refine with traffic
 		RefineWithTraffic(built, startTime, config, nic)
 
-		// Step 7: Generate VendRoute
-		route := toVendRoute(built, assignment, allFacilities, machineInfo, plannedDate, i+1)
+		// Step 5: Generate VendRoute
+		route := toVendRouteFromDriver(built, &dr, allFacilities, machineInfo, plannedDate, i+1)
 		l8c.GenerateID(&route.RouteId)
 		vendcommon.PostEntity(routes.ServiceName, routes.ServiceArea, route, nic)
 
 		generatedRoutes = append(generatedRoutes, route)
 		req.GeneratedRouteIds = append(req.GeneratedRouteIds, route.RouteId)
 
-		// Count List B machines added
-		for _, s := range cluster.Machines {
-			if s.Urgency == "low" {
+		for _, m := range dr.Machines {
+			if m.Urgency == "low" {
 				listBAdded++
 			}
 		}
@@ -116,12 +104,6 @@ func GenerateRoutes(nic ifs.IVNic, req *vend.VendRouteOptRequest) ([]*vend.VendR
 
 	req.GeneratedCount = int32(len(generatedRoutes))
 	req.ListBAdded = int32(listBAdded)
-
-	if len(generatedRoutes) == 0 && skippedClusters > 0 {
-		dayName := time.Unix(plannedDate, 0).Weekday().String()
-		req.Error = fmt.Sprintf("No drivers available on %s. %d clusters had %d urgent machines but no driver/truck match.",
-			dayName, skippedClusters, len(listA))
-	}
 
 	return generatedRoutes, nil
 }
@@ -139,7 +121,7 @@ func buildConfig(req *vend.VendRouteOptRequest) *RouteConfig {
 	}
 }
 
-func toVendRoute(built *BuiltRoute, assignment *Assignment,
+func toVendRouteFromDriver(built *BuiltRoute, dr *DriverRoute,
 	facilities []*vend.VendStockingFacility, machineInfo map[string]MachineInfo,
 	plannedDate int64, seq int) *vend.VendRoute {
 
@@ -155,7 +137,7 @@ func toVendRoute(built *BuiltRoute, assignment *Assignment,
 		}
 	}
 	if facilityId == "" && len(facilities) > 0 {
-		best := findNearestOpenFacility(assignment.StartLat, assignment.StartLng, facilities)
+		best := findNearestOpenFacility(dr.StartLat, dr.StartLng, facilities)
 		if best != nil {
 			facilityId = best.FacilityId
 		}
@@ -176,18 +158,20 @@ func toVendRoute(built *BuiltRoute, assignment *Assignment,
 			urgency = "reload"
 			machineId = ""
 			stopFacilityId = s.FacilityId
+		} else if s.IsEnd {
+			stopType = "end"
+			urgency = "end"
 		}
 		mName := ""
 		mAddr := ""
 		mCity := ""
-		if !s.IsReload {
+		if !s.IsReload && !s.IsEnd {
 			if mi, ok := machineInfo[machineId]; ok {
 				mName = mi.Name
 				mAddr = mi.Address
 				mCity = mi.City
 			}
-		} else {
-			// For reload stops, show facility name/address
+		} else if s.IsReload {
 			for _, f := range facilities {
 				if f.FacilityId == stopFacilityId {
 					mName = f.Name
@@ -198,6 +182,8 @@ func toVendRoute(built *BuiltRoute, assignment *Assignment,
 					break
 				}
 			}
+		} else if s.IsEnd {
+			mName = "End of Day"
 		}
 		stops[i] = &vend.VendRouteStop{
 			StopOrder:       int32(i + 1),
@@ -215,8 +201,8 @@ func toVendRoute(built *BuiltRoute, assignment *Assignment,
 	return &vend.VendRoute{
 		Name:              name,
 		Status:            vend.VendRouteStatus_VEND_ROUTE_STATUS_PLANNED,
-		DriverId:          assignment.DriverId,
-		VehicleId:         assignment.TruckId,
+		DriverId:          dr.Driver.DriverId,
+		VehicleId:         dr.Truck.TruckId,
 		FacilityId:        facilityId,
 		PlannedDate:       plannedDate,
 		TotalDistance:      built.Metrics.TotalDistanceMiles,

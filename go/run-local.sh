@@ -50,6 +50,35 @@ else
     fi
 fi
 
+# Ensure OSRM is running (offline road distance for route optimizer)
+echo "Checking OSRM..."
+if ! docker ps --format '{{.Names}}' | grep -q osrm-backend; then
+    OSRM_DATA="/data/osrm"
+    mkdir -p "$OSRM_DATA"
+    if [ ! -f "$OSRM_DATA/texas-latest.osrm" ]; then
+        if [ ! -f "$OSRM_DATA/texas-latest.osm.pbf" ]; then
+            echo "Downloading Texas OSM data (~500MB)..."
+            wget -q -O "$OSRM_DATA/texas-latest.osm.pbf" \
+                https://download.geofabrik.de/north-america/us/texas-latest.osm.pbf
+        fi
+        echo "Pre-processing OSRM data (this may take 10+ minutes on first run)..."
+        docker run --rm -v "$OSRM_DATA:/data" osrm/osrm-backend \
+            osrm-extract -p /opt/car.lua /data/texas-latest.osm.pbf
+        docker run --rm -v "$OSRM_DATA:/data" osrm/osrm-backend \
+            osrm-partition /data/texas-latest.osrm
+        docker run --rm -v "$OSRM_DATA:/data" osrm/osrm-backend \
+            osrm-customize /data/texas-latest.osrm
+    fi
+    echo "Starting OSRM container..."
+    docker rm -f osrm-backend 2>/dev/null || true
+    docker run -d --name osrm-backend -p 5000:5000 \
+        -v "$OSRM_DATA:/data" osrm/osrm-backend \
+        osrm-routed --algorithm mld /data/texas-latest.osrm
+    sleep 2
+else
+    echo "OSRM already running"
+fi
+
 # Build binaries
 rm -rf demo && mkdir -p demo
 cd tests/mocks/cmd && go build -o ../../../demo/mocks_demo && cd ../../../
@@ -68,6 +97,7 @@ cd ..
 rm -rf demo
 rm -rf /data/postgres/admin
 pkill -9 demo
+docker rm -f osrm-backend 2>/dev/null || true
 EOF
 chmod +x kill_demo.sh
 

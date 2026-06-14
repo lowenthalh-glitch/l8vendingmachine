@@ -50,12 +50,18 @@ func generateDrivers(store *MockDataStore) []*vend.VendDriver {
 		hireDate := time.Now().AddDate(-(1 + i), 0, 0).Unix()
 
 		// Mon-Fri schedule, staggered start times
+		// End locations: drv-0,2,4 end at facilities; drv-1,3 end at home (blank)
 		startHour := 6 + (i % 3) // 06:00, 07:00, 08:00, 06:00, 07:00
+		endLocId := ""
+		if i%2 == 0 && len(store.FacilityIDs) > 0 {
+			endLocId = pickRef(store.FacilityIDs, i/2)
+		}
 		schedule := make([]*vend.VendDriverScheduleDay, 5)
 		for d := 0; d < 5; d++ {
 			schedule[d] = &vend.VendDriverScheduleDay{
-				Day:       vend.VendDayOfWeek(d + 1), // 1=Monday .. 5=Friday
-				StartTime: fmt.Sprintf("%02d:00", startHour),
+				Day:             vend.VendDayOfWeek(d + 1), // 1=Monday .. 5=Friday
+				StartTime:       fmt.Sprintf("%02d:00", startHour),
+				EndLocationId:   endLocId,
 			}
 		}
 
