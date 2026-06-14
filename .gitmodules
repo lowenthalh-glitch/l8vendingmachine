@@ -1,3 +1,0 @@
-[submodule "go/vend/ui/web/l8ui"]
-	path = go/vend/ui/web/l8ui
-	url = https://github.com/saichler/l8ui.git
