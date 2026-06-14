@@ -10,7 +10,8 @@
     "app": {
         "dateFormat": "mm/dd/yyyy",
         "apiPrefix": "/vend",
-        "healthPath": "/0/Health"
+        "healthPath": "/0/Health",
+        "osrmUrl": "http://localhost:5000"
     },
     "api": {
         "prefix": "/vend",

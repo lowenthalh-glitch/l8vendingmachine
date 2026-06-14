@@ -39,7 +39,7 @@ type BuiltRoute struct {
 // BuildRouteForDriver orders stops with end-location awareness, inserts facility
 // reloads (preferring home depot near end), and applies 2-opt including the end leg.
 func BuildRouteForDriver(dr *DriverRoute,
-	facilities []*vend.VendStockingFacility, config *RouteConfig) *BuiltRoute {
+	facilities []*vend.VendStockingFacility, config *RouteConfig, router *Router) *BuiltRoute {
 
 	// Step 1: Order machines by nearest-neighbor, anchoring last stop near end location
 	ordered := nearestNeighborWithEnd(dr.Machines, dr.StartLat, dr.StartLng, dr.EndLat, dr.EndLng)
@@ -60,8 +60,8 @@ func BuildRouteForDriver(dr *DriverRoute,
 		Urgency: "end", IsReload: false, IsEnd: true,
 	})
 
-	// Step 6: Build legs and compute metrics (includes end leg)
-	legs := buildLegs(dr.StartLat, dr.StartLng, stops, config.AvgSpeedMph)
+	// Step 6: Build legs using Router (OSRM road distance or haversine fallback)
+	legs := buildLegsWithRouter(dr.StartLat, dr.StartLng, stops, router)
 	mpg := dr.Truck.MilesPerGallon
 	metrics := ComputeRouteMetrics(legs, 0, mpg, config.FuelPriceGal,
 		config.ServiceMinutes, config.ReloadMinutes)
@@ -316,11 +316,11 @@ func extractMachineStops(stops []RouteStop) []MachineDemand {
 	return machines
 }
 
-func buildLegs(startLat, startLng float64, stops []RouteStop, avgSpeed float64) []RouteLeg {
+func buildLegsWithRouter(startLat, startLng float64, stops []RouteStop, router *Router) []RouteLeg {
 	legs := make([]RouteLeg, len(stops))
 	curLat, curLng := startLat, startLng
 	for i, s := range stops {
-		legs[i] = HaversineLeg(curLat, curLng, s.Lat, s.Lng, avgSpeed, s.IsReload)
+		legs[i] = router.Leg(curLat, curLng, s.Lat, s.Lng, s.IsReload)
 		curLat, curLng = s.Lat, s.Lng
 	}
 	return legs

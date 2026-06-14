@@ -272,9 +272,24 @@
         allLabel.appendChild(document.createTextNode('Select All'));
         panel.appendChild(allLabel);
 
+        // Build driver/truck lookup for labels
+        var driverMap = {};
+        rawData.drivers.forEach(function(d) {
+            driverMap[d.driverId] = (d.firstName || '') + ' ' + (d.lastName || '');
+        });
+        var truckMap = {};
+        rawData.trucks.forEach(function(t) {
+            truckMap[t.truckId] = t.name || t.plateNumber || t.truckId;
+        });
+
         rawData.routes.forEach(function(r, ri) {
+            var driverName = driverMap[r.driverId] || r.driverId || '';
+            var truckName = truckMap[r.vehicleId] || r.vehicleId || '';
+            var stops = (r.stops || []).length;
+            var routeLabel = (r.name || r.routeId) + ' — ' + driverName.trim() + ' / ' + truckName + ' (' + stops + ' stops)';
+
             var label = document.createElement('label');
-            label.style.cssText = 'display:flex;align-items:center;gap:6px;padding:3px 12px;font-size:11px;cursor:pointer;';
+            label.style.cssText = 'display:flex;align-items:center;gap:6px;padding:4px 12px;font-size:11px;cursor:pointer;line-height:1.4;';
             label.addEventListener('mouseenter', function() { label.style.background = 'var(--layer8d-bg-light)'; });
             label.addEventListener('mouseleave', function() { label.style.background = ''; });
             var cb = document.createElement('input');
@@ -288,7 +303,7 @@
             dot.style.cssText = 'display:inline-block;width:8px;height:8px;border-radius:50%;background:' + color + ';flex-shrink:0;';
             label.appendChild(cb);
             label.appendChild(dot);
-            label.appendChild(document.createTextNode(r.name || r.routeId));
+            label.appendChild(document.createTextNode(routeLabel));
             panel.appendChild(label);
         });
 

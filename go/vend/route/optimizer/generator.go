@@ -39,6 +39,10 @@ func GenerateRoutes(nic ifs.IVNic, req *vend.VendRouteOptRequest) ([]*vend.VendR
 		maxDetour = req.MaxDetourDistance
 	}
 
+	// Create Router — uses OSRM if available, falls back to haversine
+	osrmURL := DefaultOSRMUrl // TODO: read from login.json app.osrmUrl
+	router := NewRouter(osrmURL)
+
 	// Step 1: Build demand lists + machine address info
 	listA, listB, machineInfo, err := BuildDemandLists(nic)
 	if err != nil {
@@ -67,9 +71,9 @@ func GenerateRoutes(nic ifs.IVNic, req *vend.VendRouteOptRequest) ([]*vend.VendR
 		startTime = plannedDate
 	}
 
-	// Step 2: Assign machines to drivers by geographic proximity
+	// Step 2: Assign machines to drivers by geographic proximity (uses Router)
 	driverRoutes := AssignMachinesToDrivers(listA, listB, allTrucks, allDrivers,
-		allFacilities, dayOfWeek, maxDetour, config, nic)
+		allFacilities, dayOfWeek, maxDetour, config, router, nic)
 
 	if len(driverRoutes) == 0 {
 		dayName := time.Unix(plannedDate, 0).Weekday().String()
@@ -81,10 +85,15 @@ func GenerateRoutes(nic ifs.IVNic, req *vend.VendRouteOptRequest) ([]*vend.VendR
 	listBAdded := 0
 
 	for i, dr := range driverRoutes {
-		// Step 3: Build route with end-location awareness + facility reloads
-		built := BuildRouteForDriver(&dr, allFacilities, config)
+		// Step 3: Build route with end-location awareness + facility reloads (uses Router)
+		built := BuildRouteForDriver(&dr, allFacilities, config, router)
 
-		// Step 4: Refine with traffic
+		// Step 4: Apply traffic statistics to leg durations
+		ApplyTrafficToLegs(built.Legs, startTime, config.ServiceMinutes, config.ReloadMinutes)
+		built.Metrics = ComputeRouteMetrics(built.Legs, startTime, built.TruckMPG,
+			config.FuelPriceGal, config.ServiceMinutes, config.ReloadMinutes)
+
+		// Step 5: Optionally refine with Google Maps real-time traffic
 		RefineWithTraffic(built, startTime, config, nic)
 
 		// Step 5: Generate VendRoute

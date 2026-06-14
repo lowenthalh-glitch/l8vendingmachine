@@ -33,7 +33,7 @@ func AssignMachinesToDrivers(listA, listB []MachineDemand,
 	allTrucks []*vend.VendDeliveryTruck, allDrivers []*vend.VendDriver,
 	allFacilities []*vend.VendStockingFacility,
 	dayOfWeek vend.VendDayOfWeek, maxDetourMiles float64,
-	config *RouteConfig, nic ifs.IVNic) []DriverRoute {
+	config *RouteConfig, router *Router, nic ifs.IVNic) []DriverRoute {
 
 	// Build available driver routes (driver+truck pairs that work on this day)
 	var driverRoutes []DriverRoute
@@ -68,7 +68,7 @@ func AssignMachinesToDrivers(listA, listB []MachineDemand,
 	}
 
 	// Assign List A machines to nearest driver (60% start proximity, 40% end proximity)
-	assignMachines(listA, driverRoutes, config)
+	assignMachines(listA, driverRoutes, config, router)
 
 	// Insert List B machines if within detour threshold
 	for _, m := range listB {
@@ -100,11 +100,10 @@ func AssignMachinesToDrivers(listA, listB []MachineDemand,
 	return result
 }
 
-func assignMachines(machines []MachineDemand, driverRoutes []DriverRoute, config *RouteConfig) {
+func assignMachines(machines []MachineDemand, driverRoutes []DriverRoute, config *RouteConfig, router *Router) {
 	assigned := make([]bool, len(machines))
 
 	for {
-		// Find next unassigned machine
 		bestMachine := -1
 		bestDriver := -1
 		bestScore := 999999.0
@@ -114,13 +113,13 @@ func assignMachines(machines []MachineDemand, driverRoutes []DriverRoute, config
 				continue
 			}
 			for di, dr := range driverRoutes {
-				// Check 8-hour cap
 				estDuration := estimateRouteDuration(dr.Machines, config)
 				if estDuration+int64(config.ServiceMinutes)*60 > MaxRouteDurationSecs {
 					continue
 				}
-				score := 0.6*Haversine(m.Lat, m.Lng, dr.StartLat, dr.StartLng) +
-					0.4*Haversine(m.Lat, m.Lng, dr.EndLat, dr.EndLng)
+				startDist, _ := router.Distance(m.Lat, m.Lng, dr.StartLat, dr.StartLng)
+				endDist, _ := router.Distance(m.Lat, m.Lng, dr.EndLat, dr.EndLng)
+				score := 0.6*startDist + 0.4*endDist
 				if score < bestScore {
 					bestScore = score
 					bestMachine = mi
