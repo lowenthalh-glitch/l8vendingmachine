@@ -7,7 +7,9 @@ require (
 	github.com/saichler/l8bus v0.0.0-20260524152159-cc0b5c210821
 	github.com/saichler/l8collector/go v0.0.0-20260613145511-2d3088c0579a
 	github.com/saichler/l8common v0.0.0-20260531125907-5a2ae47e916f
+	github.com/saichler/l8events v0.0.0-20260526025458-f1445c360635
 	github.com/saichler/l8inventory v0.0.0-20260507121209-c372a9fb7c94
+	github.com/saichler/l8logfusion v0.0.0-20260320120056-3a3617eed28f
 	github.com/saichler/l8notify v0.0.0-20260404194656-ca373e226b7d
 	github.com/saichler/l8parser v0.0.0-20260504014757-63e78ee52fb3
 	github.com/saichler/l8pollaris v0.0.0-20260418233826-378ba5e9453a
@@ -40,7 +42,6 @@ require (
 	github.com/modern-go/reflect2 v1.0.3-0.20250322232337-35a7c28c31ee // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	github.com/saichler/l8logfusion v0.0.0-20260320120056-3a3617eed28f // indirect
 	github.com/saichler/l8orm v0.0.0-20260613145442-8ef992eb7bcb // indirect
 	github.com/saichler/l8ql v0.0.0-20260613133019-24b364d1e3d8 // indirect
 	github.com/saichler/probler v0.0.0-20260523194022-a99896a9e09c // indirect
