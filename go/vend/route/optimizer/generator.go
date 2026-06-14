@@ -17,10 +17,12 @@ import (
 )
 
 const (
-	DefaultMaxRouteDist   = 50.0
-	DefaultMaxDetour      = 3.0
-	DefaultReloadMinutes  = 30
-	DefaultAvgSpeedMph    = 25.0
+	DefaultMaxRouteDist      = 50.0
+	DefaultMaxDetour         = 3.0
+	DefaultReloadMinutes     = 30
+	DefaultAvgSpeedMph       = 25.0
+	DefaultBreakAfterMinutes = 240 // 4 hours
+	DefaultBreakDuration     = 30
 	DefaultServiceMinutes = 20
 	DefaultFuelPriceGal   = 3.50
 )
@@ -122,11 +124,21 @@ func buildConfig(req *vend.VendRouteOptRequest) *RouteConfig {
 	if req.ReloadTimeMinutes > 0 {
 		reloadMin = req.ReloadTimeMinutes
 	}
+	breakAfter := int32(DefaultBreakAfterMinutes)
+	if req.BreakAfterMinutes > 0 {
+		breakAfter = req.BreakAfterMinutes
+	}
+	breakDur := int32(DefaultBreakDuration)
+	if req.BreakDurationMinutes > 0 {
+		breakDur = req.BreakDurationMinutes
+	}
 	return &RouteConfig{
-		AvgSpeedMph:    DefaultAvgSpeedMph,
-		ServiceMinutes: DefaultServiceMinutes,
-		ReloadMinutes:  reloadMin,
-		FuelPriceGal:   DefaultFuelPriceGal,
+		AvgSpeedMph:          DefaultAvgSpeedMph,
+		ServiceMinutes:       DefaultServiceMinutes,
+		ReloadMinutes:        reloadMin,
+		FuelPriceGal:         DefaultFuelPriceGal,
+		BreakAfterMinutes:    breakAfter,
+		BreakDurationMinutes: breakDur,
 	}
 }
 
@@ -167,6 +179,10 @@ func toVendRouteFromDriver(built *BuiltRoute, dr *DriverRoute,
 			urgency = "reload"
 			machineId = ""
 			stopFacilityId = s.FacilityId
+		} else if s.IsBreak {
+			stopType = "break"
+			urgency = "break"
+			machineId = ""
 		} else if s.IsEnd {
 			stopType = "end"
 			urgency = "end"
@@ -174,7 +190,9 @@ func toVendRouteFromDriver(built *BuiltRoute, dr *DriverRoute,
 		mName := ""
 		mAddr := ""
 		mCity := ""
-		if !s.IsReload && !s.IsEnd {
+		if s.IsBreak {
+			mName = "Driver Break"
+		} else if !s.IsReload && !s.IsEnd && !s.IsBreak {
 			if mi, ok := machineInfo[machineId]; ok {
 				mName = mi.Name
 				mAddr = mi.Address

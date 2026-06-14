@@ -56,12 +56,15 @@ func generateDrivers(store *MockDataStore) []*vend.VendDriver {
 		if i%2 == 0 && len(store.FacilityIDs) > 0 {
 			endLocId = pickRef(store.FacilityIDs, i/2)
 		}
+		// Shift durations: vary by driver (7-9 hours)
+		shiftMin := int32(480 + (i%3)*30) // 480, 510, 540, 480, 510
 		schedule := make([]*vend.VendDriverScheduleDay, 5)
 		for d := 0; d < 5; d++ {
 			schedule[d] = &vend.VendDriverScheduleDay{
-				Day:             vend.VendDayOfWeek(d + 1), // 1=Monday .. 5=Friday
-				StartTime:       fmt.Sprintf("%02d:00", startHour),
-				EndLocationId:   endLocId,
+				Day:                  vend.VendDayOfWeek(d + 1), // 1=Monday .. 5=Friday
+				StartTime:            fmt.Sprintf("%02d:00", startHour),
+				EndLocationId:        endLocId,
+				ShiftDurationMinutes: shiftMin,
 			}
 		}
 

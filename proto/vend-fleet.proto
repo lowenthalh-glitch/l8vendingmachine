@@ -151,6 +151,8 @@ message VendLocation {
   string contact_name = 7;
   string contact_phone = 8;
   string contact_email = 9;
+  string access_window_start = 12;    // "HH:MM" — earliest access time (blank = no restriction)
+  string access_window_end = 13;      // "HH:MM" — latest access time (blank = no restriction)
   map<string, string> custom_fields = 10;
   l8common.AuditInfo audit_info = 11;
 }

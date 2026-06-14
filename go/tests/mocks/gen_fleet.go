@@ -25,16 +25,29 @@ var locationCoords = [][2]float64{
 func generateLocations() []*vend.VendLocation {
 	items := make([]*vend.VendLocation, len(LocationNames))
 	for i, name := range LocationNames {
+		// Access windows for restricted locations
+		var winStart, winEnd string
+		switch LocationTypes[i] {
+		case "OFFICE_LOBBY", "OFFICE_BREAKROOM":
+			winStart, winEnd = "07:00", "18:00"
+		case "HOSPITAL":
+			winStart, winEnd = "06:00", "20:00"
+		case "UNIVERSITY":
+			winStart, winEnd = "07:00", "22:00"
+		// GYM, AIRPORT, HOTEL, MALL, FACTORY, TRAIN_STATION — no restriction
+		}
 		items[i] = &vend.VendLocation{
-			LocationId:   genID("loc", i),
-			Name:         name,
-			LocationType: LocationTypes[i],
-			Timezone:     "America/Chicago",
-			Coordinates:  &vend.VendGpsCoordinates{Latitude: locationCoords[i][0], Longitude: locationCoords[i][1]},
-			ContactName:  fmt.Sprintf("%s %s", firstNames[rand.Intn(len(firstNames))], lastNames[rand.Intn(len(lastNames))]),
-			ContactPhone: randomPhone(),
-			ContactEmail: fmt.Sprintf("contact%d@vendingco.com", i+1),
-			AuditInfo:    createAuditInfo(),
+			LocationId:        genID("loc", i),
+			Name:              name,
+			LocationType:      LocationTypes[i],
+			Timezone:          "America/Chicago",
+			Coordinates:       &vend.VendGpsCoordinates{Latitude: locationCoords[i][0], Longitude: locationCoords[i][1]},
+			AccessWindowStart: winStart,
+			AccessWindowEnd:   winEnd,
+			ContactName:       fmt.Sprintf("%s %s", firstNames[rand.Intn(len(firstNames))], lastNames[rand.Intn(len(lastNames))]),
+			ContactPhone:      randomPhone(),
+			ContactEmail:      fmt.Sprintf("contact%d@vendingco.com", i+1),
+			AuditInfo:         createAuditInfo(),
 		}
 	}
 	return items

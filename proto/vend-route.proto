@@ -103,6 +103,7 @@ message VendDriverScheduleDay {
     string start_time = 2;               // "HH:MM" format (e.g., "07:30")
     string start_location_id = 3;        // cross-ref: VendLocation (blank = home address)
     string end_location_id = 4;          // cross-ref: VendLocation (blank = home address)
+    int32 shift_duration_minutes = 5;    // working hours for this day (default 480 = 8 hours)
 }
 
 message VendDriverList {
@@ -182,6 +183,8 @@ message VendRouteOptRequest {
     double max_route_distance = 3;       // Max miles per route, default = 50
     double max_detour_distance = 4;      // Max detour for List B machines, default = 3
     int32 reload_time_minutes = 5;       // Time to reload at facility, default = 30
+    int32 break_after_minutes = 6;       // Insert break after this many minutes of driving (default 240 = 4 hours)
+    int32 break_duration_minutes = 7;    // Break duration (default 30)
 
     // Output (populated by optimizer, returned in POST response)
     repeated string generated_route_ids = 10;

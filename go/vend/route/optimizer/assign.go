@@ -13,18 +13,19 @@ import (
 	"github.com/saichler/l8vendingmachine/go/vend/warehouse/facilities"
 )
 
-const MaxRouteDurationSecs = 8 * 3600 // 8 hours max per route
+const DefaultShiftDurationSecs = 8 * 3600 // 8 hours default
 
 // DriverRoute holds a driver's assignment: who they are, their truck, locations, and assigned machines.
 type DriverRoute struct {
-	Driver   *vend.VendDriver
-	Truck    *vend.VendDeliveryTruck
-	Schedule *vend.VendDriverScheduleDay
-	StartLat float64
-	StartLng float64
-	EndLat   float64
-	EndLng   float64
-	Machines []MachineDemand
+	Driver           *vend.VendDriver
+	Truck            *vend.VendDeliveryTruck
+	Schedule         *vend.VendDriverScheduleDay
+	StartLat         float64
+	StartLng         float64
+	EndLat           float64
+	EndLng           float64
+	ShiftDurationSecs int64
+	Machines         []MachineDemand
 }
 
 // AssignMachinesToDrivers assigns machines to drivers based on geographic proximity
@@ -56,10 +57,15 @@ func AssignMachinesToDrivers(listA, listB []MachineDemand,
 		startLat, startLng := resolveStartLocation(driver, sched, nic)
 		endLat, endLng := resolveEndLocation(driver, sched, truck, allFacilities, startLat, startLng, nic)
 
+		shiftSecs := int64(DefaultShiftDurationSecs)
+		if sched.ShiftDurationMinutes > 0 {
+			shiftSecs = int64(sched.ShiftDurationMinutes) * 60
+		}
 		driverRoutes = append(driverRoutes, DriverRoute{
 			Driver: driver, Truck: truck, Schedule: sched,
 			StartLat: startLat, StartLng: startLng,
 			EndLat: endLat, EndLng: endLng,
+			ShiftDurationSecs: shiftSecs,
 		})
 	}
 
@@ -114,7 +120,7 @@ func assignMachines(machines []MachineDemand, driverRoutes []DriverRoute, config
 			}
 			for di, dr := range driverRoutes {
 				estDuration := estimateRouteDuration(dr.Machines, config)
-				if estDuration+int64(config.ServiceMinutes)*60 > MaxRouteDurationSecs {
+				if estDuration+int64(config.ServiceMinutes)*60 > dr.ShiftDurationSecs {
 					continue
 				}
 				startDist, _ := router.Distance(m.Lat, m.Lng, dr.StartLat, dr.StartLng)

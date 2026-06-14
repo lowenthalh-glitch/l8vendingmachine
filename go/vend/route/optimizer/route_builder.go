@@ -11,9 +11,11 @@ import (
 // RouteConfig holds tuning parameters for route building.
 type RouteConfig struct {
 	AvgSpeedMph    float64
-	ServiceMinutes int32
-	ReloadMinutes  int32
-	FuelPriceGal   float64
+	ServiceMinutes     int32
+	ReloadMinutes      int32
+	FuelPriceGal       float64
+	BreakAfterMinutes  int32 // insert break after this many driving minutes (default 240)
+	BreakDurationMinutes int32 // break length (default 30)
 }
 
 // RouteStop represents a stop in the built route (machine, facility reload, or end-of-day).
@@ -22,9 +24,10 @@ type RouteStop struct {
 	FacilityId string
 	Lat        float64
 	Lng        float64
-	Urgency    string // "high", "low", "reload", "end"
+	Urgency    string // "high", "low", "reload", "end", "break"
 	IsReload   bool
 	IsEnd      bool
+	IsBreak    bool
 	Products   map[string]int32 // sku → qty to restock at this stop
 }
 
@@ -54,7 +57,10 @@ func BuildRouteForDriver(dr *DriverRoute,
 	// Step 4: Prefer home depot for last reload
 	preferHomeDepotForLastReload(stops, dr.Truck, facilities)
 
-	// Step 5: Add end-of-day stop
+	// Step 5: Insert break stops after N hours of cumulative driving/service
+	stops = insertBreaks(stops, dr.StartLat, dr.StartLng, config, router)
+
+	// Step 6: Add end-of-day stop
 	stops = append(stops, RouteStop{
 		Lat: dr.EndLat, Lng: dr.EndLng,
 		Urgency: "end", IsReload: false, IsEnd: true,
@@ -425,4 +431,52 @@ func preferHomeDepotForLastReload(stops []RouteStop, truck *vend.VendDeliveryTru
 		stops[lastReloadIdx].Lat = homeDepot.Coordinates.Latitude
 		stops[lastReloadIdx].Lng = homeDepot.Coordinates.Longitude
 	}
+}
+
+// insertBreaks walks through stops, tracks cumulative time, and inserts a break
+// stop when the driver has been working longer than breakAfterMinutes.
+// If a facility reload is near the break point, the break is combined with it.
+func insertBreaks(stops []RouteStop, startLat, startLng float64, config *RouteConfig, router *Router) []RouteStop {
+	breakAfter := int64(config.BreakAfterMinutes) * 60
+	if breakAfter <= 0 {
+		return stops // breaks disabled
+	}
+
+	var result []RouteStop
+	cumulativeSecs := int64(0)
+	lastBreakAt := int64(0)
+	curLat, curLng := startLat, startLng
+
+	for _, s := range stops {
+		// Estimate travel time to this stop
+		_, travelSecs := router.Distance(curLat, curLng, s.Lat, s.Lng)
+		cumulativeSecs += travelSecs
+
+		// Check if we need a break before this stop
+		timeSinceBreak := cumulativeSecs - lastBreakAt
+		if timeSinceBreak >= breakAfter && !s.IsReload {
+			// Insert break at current position (driver stops where they are)
+			result = append(result, RouteStop{
+				Lat: curLat, Lng: curLng,
+				Urgency: "break", IsBreak: true,
+			})
+			lastBreakAt = cumulativeSecs
+		}
+
+		// If this is a reload stop, it counts as a break too (driver rests while loading)
+		if s.IsReload {
+			lastBreakAt = cumulativeSecs
+		}
+
+		result = append(result, s)
+		curLat, curLng = s.Lat, s.Lng
+
+		// Add service time
+		if s.IsReload {
+			cumulativeSecs += int64(config.ReloadMinutes) * 60
+		} else {
+			cumulativeSecs += int64(config.ServiceMinutes) * 60
+		}
+	}
+	return result
 }
