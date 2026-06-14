@@ -15,10 +15,15 @@
                 ...f.reference('facilityId', 'Facility', 'VendStockingFacility'),
                 ...f.date('plannedDate', 'Planned Date')
             ]),
-            f.section('Route Metrics', [
+            f.section('Planned Metrics', [
                 ...f.number('totalDistance', 'Distance (miles)'),
                 ...f.number('totalDuration', 'Duration (min)'),
                 ...f.number('estimatedFuelCost', 'Est. Fuel Cost')
+            ]),
+            f.section('Actual Metrics', [
+                ...f.number('actualDistance', 'Actual Distance (miles)'),
+                ...f.number('actualDuration', 'Actual Duration (min)'),
+                ...f.number('actualFuelCost', 'Actual Fuel Cost')
             ]),
             f.section('Stops', [
                 ...f.inlineTable('stops', 'Route Stops', [
@@ -27,7 +32,8 @@
                     { key: 'machineName', label: 'Name', type: 'text' },
                     { key: 'locationAddress', label: 'Address', type: 'text' },
                     { key: 'locationCity', label: 'City', type: 'text' },
-                    { key: 'serviceUrgency', label: 'Urgency', type: 'text' }
+                    { key: 'serviceUrgency', label: 'Urgency', type: 'text' },
+                    { key: 'completionNotes', label: 'Notes', type: 'text' }
                 ])
             ])
         ]),

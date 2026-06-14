@@ -66,60 +66,103 @@ func GenerateRoutes(nic ifs.IVNic, req *vend.VendRouteOptRequest) ([]*vend.VendR
 	if plannedDate == 0 {
 		plannedDate = time.Now().Add(24 * time.Hour).Unix()
 	}
-	dayOfWeek := toDayOfWeek(time.Unix(plannedDate, 0))
 
 	startTime := req.StartTime
 	if startTime == 0 {
 		startTime = plannedDate
 	}
 
-	// Step 2: Assign machines to drivers by geographic proximity (uses Router)
-	driverRoutes := AssignMachinesToDrivers(listA, listB, allTrucks, allDrivers,
-		allFacilities, dayOfWeek, maxDetour, config, router, nic)
-
-	if len(driverRoutes) == 0 {
-		dayName := time.Unix(plannedDate, 0).Weekday().String()
-		req.Error = fmt.Sprintf("No drivers available on %s with %d urgent machines.", dayName, len(listA))
-		return nil, nil
+	// Determine how many days to plan
+	numDays := 1
+	if req.PlannedDateEnd > plannedDate {
+		numDays = int((req.PlannedDateEnd-plannedDate)/86400) + 1
+		if numDays > 35 {
+			numDays = 35 // cap at 5 weeks
+		}
 	}
-
-	// Step 2.5: Balance workload across drivers
-	BalanceWorkload(driverRoutes, req.BalanceMode, config)
 
 	var generatedRoutes []*vend.VendRoute
 	listBAdded := 0
+	servedMachines := make(map[string]bool) // machines served on previous days
+	routeSeq := 0
 
-	for i, dr := range driverRoutes {
-		// Step 3: Build route with end-location awareness + facility reloads (uses Router)
-		built := BuildRouteForDriver(&dr, allFacilities, config, router)
+	for day := 0; day < numDays; day++ {
+		dayDate := plannedDate + int64(day)*86400
+		dayTime := time.Unix(dayDate, 0)
 
-		// Step 4: Apply traffic statistics to leg durations
-		ApplyTrafficToLegs(built.Legs, startTime, config.ServiceMinutes, config.ReloadMinutes)
-		built.Metrics = ComputeRouteMetrics(built.Legs, startTime, built.TruckMPG,
-			config.FuelPriceGal, config.ServiceMinutes, config.ReloadMinutes)
+		// Skip weekends (no drivers scheduled)
+		if dayTime.Weekday() == time.Saturday || dayTime.Weekday() == time.Sunday {
+			continue
+		}
 
-		// Step 5: Optionally refine with Google Maps real-time traffic
-		RefineWithTraffic(built, startTime, config, nic)
+		dayOfWeek := toDayOfWeek(dayTime)
+		dayStartTime := startTime + int64(day)*86400
 
-		// Step 5: Generate VendRoute
-		route := toVendRouteFromDriver(built, &dr, allFacilities, machineInfo, plannedDate, i+1)
-		l8c.GenerateID(&route.RouteId)
-		vendcommon.PostEntity(routes.ServiceName, routes.ServiceArea, route, nic)
+		// Filter out machines served on previous days
+		dayListA := filterServed(listA, servedMachines)
+		dayListB := filterServed(listB, servedMachines)
 
-		generatedRoutes = append(generatedRoutes, route)
-		req.GeneratedRouteIds = append(req.GeneratedRouteIds, route.RouteId)
+		if len(dayListA) == 0 {
+			break // All urgent machines served
+		}
 
-		for _, m := range dr.Machines {
-			if m.Urgency == "low" {
-				listBAdded++
+		// Assign machines to drivers for this day
+		driverRoutes := AssignMachinesToDrivers(dayListA, dayListB, allTrucks, allDrivers,
+			allFacilities, dayOfWeek, maxDetour, config, router, nic)
+
+		if len(driverRoutes) == 0 {
+			continue // No drivers available this day, try next
+		}
+
+		BalanceWorkload(driverRoutes, req.BalanceMode, config)
+
+		for _, dr := range driverRoutes {
+			routeSeq++
+			built := BuildRouteForDriver(&dr, allFacilities, config, router)
+
+			ApplyTrafficToLegs(built.Legs, dayStartTime, config.ServiceMinutes, config.ReloadMinutes)
+			built.Metrics = ComputeRouteMetrics(built.Legs, dayStartTime, built.TruckMPG,
+				config.FuelPriceGal, config.ServiceMinutes, config.ReloadMinutes)
+
+			RefineWithTraffic(built, dayStartTime, config, nic)
+
+			route := toVendRouteFromDriver(built, &dr, allFacilities, machineInfo, dayDate, routeSeq)
+			l8c.GenerateID(&route.RouteId)
+			vendcommon.PostEntity(routes.ServiceName, routes.ServiceArea, route, nic)
+
+			generatedRoutes = append(generatedRoutes, route)
+			req.GeneratedRouteIds = append(req.GeneratedRouteIds, route.RouteId)
+
+			// Mark machines as served so they're excluded from next day
+			for _, m := range dr.Machines {
+				servedMachines[m.MachineId] = true
+				if m.Urgency == "low" {
+					listBAdded++
+				}
 			}
 		}
 	}
 
 	req.GeneratedCount = int32(len(generatedRoutes))
 	req.ListBAdded = int32(listBAdded)
+	req.PlannedDays = int32(numDays)
+
+	if len(generatedRoutes) == 0 {
+		dayName := time.Unix(plannedDate, 0).Weekday().String()
+		req.Error = fmt.Sprintf("No drivers available on %s with %d urgent machines.", dayName, len(listA))
+	}
 
 	return generatedRoutes, nil
+}
+
+func filterServed(machines []MachineDemand, served map[string]bool) []MachineDemand {
+	var result []MachineDemand
+	for _, m := range machines {
+		if !served[m.MachineId] {
+			result = append(result, m)
+		}
+	}
+	return result
 }
 
 func buildConfig(req *vend.VendRouteOptRequest) *RouteConfig {

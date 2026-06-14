@@ -40,6 +40,11 @@ message VendRoute {
     l8common.AuditInfo audit_info = 14;
     string facility_id = 15;             // cross-ref: VendStockingFacility (primary facility)
     double estimated_fuel_cost = 16;     // distance / MPG * fuel price
+
+    // Phase 6: Actuals (populated after route completion)
+    double actual_distance = 17;
+    int32 actual_duration = 18;
+    double actual_fuel_cost = 19;
 }
 
 message VendRouteList {
@@ -61,6 +66,11 @@ message VendRouteStop {
     string machine_name = 10;
     string location_address = 11;
     string location_city = 12;
+
+    // Phase 6: Proof of service (populated by driver on completion)
+    int64 completed_at = 13;
+    string completion_notes = 14;
+    string completion_photo = 15;        // base64 or storage path
 }
 
 // @PrimeObject
@@ -189,6 +199,7 @@ message VendRouteOptRequest {
     int32 break_after_minutes = 6;       // Insert break after this many minutes of driving (default 240 = 4 hours)
     int32 break_duration_minutes = 7;    // Break duration (default 30)
     string balance_mode = 8;             // "stops", "duration", or "" (none/default)
+    int64 planned_date_end = 9;          // Phase 4: end of date range for multi-day planning
 
     // Output (populated by optimizer, returned in POST response)
     repeated string generated_route_ids = 10;
@@ -196,4 +207,5 @@ message VendRouteOptRequest {
     int32 list_a_count = 12;             // Machines that needed immediate restock
     int32 list_b_added = 13;             // "Can wait" machines added opportunistically
     string error = 14;                   // Error message if generation failed
+    int32 planned_days = 15;             // Number of days planned (multi-day)
 }
