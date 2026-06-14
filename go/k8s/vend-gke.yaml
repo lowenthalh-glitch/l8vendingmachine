@@ -1,0 +1,325 @@
+# GKE deployment — uses GCE Persistent Disk StorageClass with a single shared PVC
+# All services share the "vend" namespace so they can reference the same PVC.
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: vend
+  labels:
+    name: vend
+
+---
+
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: vend-storage
+provisioner: kubernetes.io/gce-pd
+parameters:
+  type: pd-standard
+reclaimPolicy: Retain
+volumeBindingMode: WaitForFirstConsumer
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  namespace: vend
+  name: vend-data
+  labels:
+    app: vend
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: vend-storage
+  resources:
+    requests:
+      storage: 50Gi
+
+---
+
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  namespace: vend
+  name: vend-vnet
+  labels:
+    app: vend-vnet
+spec:
+  selector:
+    matchLabels:
+      app: vend-vnet
+  template:
+    metadata:
+      labels:
+        app: vend-vnet
+    spec:
+      hostNetwork: true
+      containers:
+        - name: vend-vnet
+          image: saichler/vendmachine-vnet:latest
+          imagePullPolicy: Always
+          env:
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+          volumeMounts:
+            - name: hdata
+              mountPath: /data
+      volumes:
+        - name: hdata
+          persistentVolumeClaim:
+            claimName: vend-data
+
+---
+
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  namespace: vend
+  name: vend-logs-vnet
+  labels:
+    app: vend-logs-vnet
+spec:
+  selector:
+    matchLabels:
+      app: vend-logs-vnet
+  template:
+    metadata:
+      labels:
+        app: vend-logs-vnet
+    spec:
+      hostNetwork: true
+      containers:
+        - name: vend-logs-vnet
+          image: saichler/vend-logs-vnet:latest
+          imagePullPolicy: Always
+          env:
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+          volumeMounts:
+            - name: hdata
+              mountPath: /data
+      volumes:
+        - name: hdata
+          persistentVolumeClaim:
+            claimName: vend-data
+
+---
+
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  namespace: vend
+  name: vend
+  labels:
+    app: vend
+spec:
+  selector:
+    matchLabels:
+      app: vend
+  template:
+    metadata:
+      labels:
+        app: vend
+    spec:
+      containers:
+        - name: vend
+          image: saichler/vendmachine:latest
+          imagePullPolicy: Always
+          env:
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+          volumeMounts:
+            - name: hdata
+              mountPath: /data
+      volumes:
+        - name: hdata
+          persistentVolumeClaim:
+            claimName: vend-data
+
+---
+
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  namespace: vend
+  name: vend-web
+  labels:
+    app: vend-web
+spec:
+  selector:
+    matchLabels:
+      app: vend-web
+  template:
+    metadata:
+      labels:
+        app: vend-web
+    spec:
+      hostNetwork: true
+      containers:
+        - name: vend-web
+          image: saichler/vendmachine-web:latest
+          imagePullPolicy: Always
+          env:
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+          volumeMounts:
+            - name: hdata
+              mountPath: /data
+      volumes:
+        - name: hdata
+          persistentVolumeClaim:
+            claimName: vend-data
+
+---
+
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  namespace: vend
+  name: vend-inv
+  labels:
+    app: vend-inv
+spec:
+  selector:
+    matchLabels:
+      app: vend-inv
+  template:
+    metadata:
+      labels:
+        app: vend-inv
+    spec:
+      containers:
+        - name: vend-inv
+          image: saichler/vendmachine-inv:latest
+          imagePullPolicy: Always
+          env:
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+          volumeMounts:
+            - name: hdata
+              mountPath: /data
+      volumes:
+        - name: hdata
+          persistentVolumeClaim:
+            claimName: vend-data
+
+---
+
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  namespace: vend
+  name: vend-collector
+  labels:
+    app: vend-collector
+spec:
+  selector:
+    matchLabels:
+      app: vend-collector
+  template:
+    metadata:
+      labels:
+        app: vend-collector
+    spec:
+      containers:
+        - name: vend-collector
+          image: saichler/vendmachine-collector:latest
+          imagePullPolicy: Always
+          env:
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+          volumeMounts:
+            - name: hdata
+              mountPath: /data
+      volumes:
+        - name: hdata
+          persistentVolumeClaim:
+            claimName: vend-data
+
+---
+
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  namespace: vend
+  name: vend-parser
+  labels:
+    app: vend-parser
+spec:
+  selector:
+    matchLabels:
+      app: vend-parser
+  template:
+    metadata:
+      labels:
+        app: vend-parser
+    spec:
+      containers:
+        - name: vend-parser
+          image: saichler/vendmachine-parser:latest
+          imagePullPolicy: Always
+          env:
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+          volumeMounts:
+            - name: hdata
+              mountPath: /data
+      volumes:
+        - name: hdata
+          persistentVolumeClaim:
+            claimName: vend-data
+
+---
+
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  namespace: vend
+  name: vend-log-agent
+  labels:
+    app: vend-log-agent
+spec:
+  selector:
+    matchLabels:
+      app: vend-log-agent
+  template:
+    metadata:
+      labels:
+        app: vend-log-agent
+    spec:
+      containers:
+        - name: vend-log-agent
+          image: saichler/vend-log-agent:latest
+          imagePullPolicy: Always
+          env:
+            - name: LOGPATH
+              value: /data/logs/vend
+            - name: LOGFILE
+              value: "*"
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+          volumeMounts:
+            - name: hdata
+              mountPath: /data
+      volumes:
+        - name: hdata
+          persistentVolumeClaim:
+            claimName: vend-data

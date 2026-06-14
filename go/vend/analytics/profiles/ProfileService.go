@@ -19,6 +19,6 @@ const (
 func Activate(creds, dbname string, vnic ifs.IVNic) {
 	common.ActivateService(common.ServiceConfig{
 		ServiceName: ServiceName, ServiceArea: ServiceArea,
-		PrimaryKey: "ProfileId",
+		PrimaryKey: "ProfileId", Callback: newProfileServiceCallback(vnic),
 	}, &vend.VendMachineProfile{}, &vend.VendMachineProfileList{}, creds, dbname, vnic)
 }

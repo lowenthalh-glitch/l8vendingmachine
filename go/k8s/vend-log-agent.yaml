@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: vend-log-agent
+  labels:
+    name: vend-log-agent
+
+---
+
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  namespace: vend-log-agent
+  name: vend-log-agent
+  labels:
+    app: vend-log-agent
+spec:
+  selector:
+    matchLabels:
+      app: vend-log-agent
+  template:
+    metadata:
+      labels:
+        app: vend-log-agent
+    spec:
+      containers:
+        - name: vend-log-agent
+          image: saichler/vend-log-agent:latest
+          imagePullPolicy: Always
+          env:
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: LOGPATH
+              value: /data/logs/vend
+            - name: LOGFILE
+              value: "*"
+          volumeMounts:
+            - name: hdata
+              mountPath: /data
+      volumes:
+        - name: hdata
+          hostPath:
+            path: /data
+            type: DirectoryOrCreate

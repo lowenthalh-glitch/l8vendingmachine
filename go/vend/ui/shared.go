@@ -23,6 +23,7 @@ import (
 	"github.com/saichler/l8pollaris/go/types/l8tpollaris"
 	"github.com/saichler/l8types/go/ifs"
 	"github.com/saichler/l8types/go/types/l8api"
+	l8events "github.com/saichler/l8types/go/types/l8events"
 	"github.com/saichler/l8vendingmachine/go/types/vend"
 	"github.com/saichler/l8vendingmachine/go/vend/common"
 )
@@ -85,6 +86,9 @@ func RegisterTypes(resources ifs.IResources) {
 	common.RegisterType(resources, &alm.AlarmFilter{}, &alm.AlarmFilterList{}, "FilterId")
 	common.RegisterType(resources, &alm.ArchivedAlarm{}, &alm.ArchivedAlarmList{}, "AlarmId")
 	common.RegisterType(resources, &alm.ArchivedEvent{}, &alm.ArchivedEventList{}, "EventId")
+
+	// Events (l8events EventRecord for SYS module)
+	common.RegisterType(resources, &l8events.EventRecord{}, &l8events.EventRecordList{}, "EventId")
 
 	// Alerts & Maintenance (VendAlert kept for backward compat, to be removed later)
 	common.RegisterType(resources, &vend.VendAlert{}, &vend.VendAlertList{}, "AlertId")

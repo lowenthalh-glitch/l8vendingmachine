@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: vend-logs-vnet
+  labels:
+    name: vend-logs-vnet
+
+---
+
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  namespace: vend-logs-vnet
+  name: vend-logs-vnet
+  labels:
+    app: vend-logs-vnet
+spec:
+  selector:
+    matchLabels:
+      app: vend-logs-vnet
+  template:
+    metadata:
+      labels:
+        app: vend-logs-vnet
+    spec:
+      hostNetwork: true
+      containers:
+        - name: vend-logs-vnet
+          image: saichler/vend-logs-vnet:latest
+          imagePullPolicy: Always
+          env:
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+          volumeMounts:
+            - name: hdata
+              mountPath: /data
+      volumes:
+        - name: hdata
+          hostPath:
+            path: /data
+            type: DirectoryOrCreate

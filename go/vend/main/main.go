@@ -33,6 +33,7 @@ import (
 	"github.com/saichler/l8alarms/go/types/alm"
 	"github.com/saichler/l8bus/go/overlay/vnic"
 	l8common "github.com/saichler/l8common/go/common"
+	evtservices "github.com/saichler/l8events/go/services"
 	"github.com/saichler/l8pollaris/go/pollaris"
 	"github.com/saichler/l8pollaris/go/pollaris/targets"
 	"github.com/saichler/l8types/go/ifs"
@@ -69,6 +70,9 @@ func main() {
 
 	fmt.Println("[vend] Activating all services...")
 	services.ActivateAllServices(common.DB_CREDS, common.DB_NAME, nic)
+
+	fmt.Println("[vend] Activating events service...")
+	evtservices.ActivateEvents(common.DB_CREDS, common.DB_NAME, nic)
 
 	// Activate Credentials service (for targets UI credential management)
 	fmt.Println("[vend] Activating Credentials service...")

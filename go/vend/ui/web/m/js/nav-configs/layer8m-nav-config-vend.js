@@ -108,6 +108,31 @@
                     { key: 'reports', label: 'Reports', icon: 'reports', endpoint: '/10/VendRpt', model: 'VendReport', idField: 'reportId' }
                 ]
             }
+        },
+        alarms: {
+            subModules: [
+                { key: 'alarms', label: 'Alarms', icon: 'alarms' }
+            ],
+            services: {
+                'alarms': [
+                    { key: 'alarms', label: 'Alarms', icon: 'alarms', endpoint: '/10/Alarm', model: 'Alarm', idField: 'alarmId' },
+                    { key: 'definitions', label: 'Definitions', icon: 'alarms', endpoint: '/10/AlarmDef', model: 'AlarmDefinition', idField: 'definitionId' },
+                    { key: 'filters', label: 'Filters', icon: 'alarms', endpoint: '/10/AlrmFltr', model: 'AlarmFilter', idField: 'filterId' },
+                    { key: 'events', label: 'Events', icon: 'alarms', endpoint: '/10/Event', model: 'Event', idField: 'eventId', readOnly: true }
+                ]
+            }
+        },
+        nayax: {
+            subModules: [
+                { key: 'machines', label: 'Machines', icon: 'nayax' }
+            ],
+            services: {
+                'machines': [
+                    { key: 'machines', label: 'Machines', icon: 'nayax', endpoint: '/0/VCache', model: 'VendMachine', idField: 'machineId', readOnly: true },
+                    { key: 'groups', label: 'Groups', icon: 'nayax', endpoint: '/10/MachGrp', model: 'VendMachineGroup', idField: 'groupId' },
+                    { key: 'locations', label: 'Locations', icon: 'nayax', endpoint: '/10/Location', model: 'VendLocation', idField: 'locationId' }
+                ]
+            }
         }
     };
 })();

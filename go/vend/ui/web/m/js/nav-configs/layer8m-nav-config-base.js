@@ -13,6 +13,8 @@
             { key: 'warehouse', label: 'Warehouse', icon: 'warehouse', hasSubModules: true },
             { key: 'compliance', label: 'Compliance', icon: 'compliance', hasSubModules: true },
             { key: 'reports', label: 'Reports', icon: 'reports', hasSubModules: true },
+            { key: 'alarms', label: 'Alarms', icon: 'alarms', hasSubModules: true },
+            { key: 'nayax', label: 'Nayax', icon: 'nayax', hasSubModules: true },
             { key: 'system', label: 'System', icon: 'system', hasSubModules: true }
         ]
     };

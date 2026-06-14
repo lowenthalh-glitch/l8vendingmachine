@@ -20,6 +20,6 @@ const (
 func Activate(creds, dbname string, vnic ifs.IVNic) {
 	common.ActivateService(common.ServiceConfig{
 		ServiceName: ServiceName, ServiceArea: ServiceArea,
-		PrimaryKey: "PerformerId",
+		PrimaryKey: "PerformerId", Callback: newTopPerformerServiceCallback(vnic),
 	}, &vend.VendTopPerformer{}, &vend.VendTopPerformerList{}, creds, dbname, vnic)
 }

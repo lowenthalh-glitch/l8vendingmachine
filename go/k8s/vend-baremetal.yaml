@@ -1,0 +1,485 @@
+# Bare-metal PVC version — requires local-path-provisioner:
+#   kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/master/deploy/local-path-storage.yaml
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: vend-vnet
+  labels:
+    name: vend-vnet
+
+---
+
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: vend-local-storage
+provisioner: rancher.io/local-path
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer
+
+---
+
+# vend-vnet: was DaemonSet, now StatefulSet with anti-affinity for one-per-node
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  namespace: vend-vnet
+  name: vend-vnet
+  labels:
+    app: vend-vnet
+spec:
+  serviceName: vend-vnet
+  replicas: 2
+  selector:
+    matchLabels:
+      app: vend-vnet
+  template:
+    metadata:
+      labels:
+        app: vend-vnet
+    spec:
+      hostNetwork: true
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: vend-vnet
+              topologyKey: kubernetes.io/hostname
+      containers:
+        - name: vend-vnet
+          image: saichler/vendmachine-vnet:latest
+          imagePullPolicy: Always
+          env:
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+          volumeMounts:
+            - name: hdata
+              mountPath: /data
+  volumeClaimTemplates:
+    - metadata:
+        name: hdata
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: vend-local-storage
+        resources:
+          requests:
+            storage: 5Gi
+
+---
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: vend-logs-vnet
+  labels:
+    name: vend-logs-vnet
+
+---
+
+# vend-logs-vnet: was DaemonSet, now StatefulSet with anti-affinity for one-per-node
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  namespace: vend-logs-vnet
+  name: vend-logs-vnet
+  labels:
+    app: vend-logs-vnet
+spec:
+  serviceName: vend-logs-vnet
+  replicas: 2
+  selector:
+    matchLabels:
+      app: vend-logs-vnet
+  template:
+    metadata:
+      labels:
+        app: vend-logs-vnet
+    spec:
+      hostNetwork: true
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: vend-logs-vnet
+              topologyKey: kubernetes.io/hostname
+      containers:
+        - name: vend-logs-vnet
+          image: saichler/vend-logs-vnet:latest
+          imagePullPolicy: Always
+          env:
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+          volumeMounts:
+            - name: hdata
+              mountPath: /data
+  volumeClaimTemplates:
+    - metadata:
+        name: hdata
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: vend-local-storage
+        resources:
+          requests:
+            storage: 5Gi
+
+---
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: vend
+  labels:
+    name: vend
+
+---
+
+# vend: was DaemonSet, now StatefulSet with anti-affinity for one-per-node
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  namespace: vend
+  name: vend
+  labels:
+    app: vend
+spec:
+  serviceName: vend
+  replicas: 2
+  selector:
+    matchLabels:
+      app: vend
+  template:
+    metadata:
+      labels:
+        app: vend
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: vend
+              topologyKey: kubernetes.io/hostname
+      containers:
+        - name: vend
+          image: saichler/vendmachine:latest
+          imagePullPolicy: Always
+          env:
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+          volumeMounts:
+            - name: hdata
+              mountPath: /data
+  volumeClaimTemplates:
+    - metadata:
+        name: hdata
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: vend-local-storage
+        resources:
+          requests:
+            storage: 10Gi
+
+---
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: vend-web
+  labels:
+    name: vend-web
+
+---
+
+# vend-web: was DaemonSet, now StatefulSet with anti-affinity for one-per-node
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  namespace: vend-web
+  name: vend-web
+  labels:
+    app: vend-web
+spec:
+  serviceName: vend-web
+  replicas: 2
+  selector:
+    matchLabels:
+      app: vend-web
+  template:
+    metadata:
+      labels:
+        app: vend-web
+    spec:
+      hostNetwork: true
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: vend-web
+              topologyKey: kubernetes.io/hostname
+      containers:
+        - name: vend-web
+          image: saichler/vendmachine-web:latest
+          imagePullPolicy: Always
+          env:
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+          volumeMounts:
+            - name: hdata
+              mountPath: /data
+  volumeClaimTemplates:
+    - metadata:
+        name: hdata
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: vend-local-storage
+        resources:
+          requests:
+            storage: 5Gi
+
+---
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: vend-inv
+  labels:
+    name: vend-inv
+
+---
+
+# vend-inv: was DaemonSet, now StatefulSet with anti-affinity for one-per-node
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  namespace: vend-inv
+  name: vend-inv
+  labels:
+    app: vend-inv
+spec:
+  serviceName: vend-inv
+  replicas: 2
+  selector:
+    matchLabels:
+      app: vend-inv
+  template:
+    metadata:
+      labels:
+        app: vend-inv
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: vend-inv
+              topologyKey: kubernetes.io/hostname
+      containers:
+        - name: vend-inv
+          image: saichler/vendmachine-inv:latest
+          imagePullPolicy: Always
+          env:
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+          volumeMounts:
+            - name: hdata
+              mountPath: /data
+  volumeClaimTemplates:
+    - metadata:
+        name: hdata
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: vend-local-storage
+        resources:
+          requests:
+            storage: 5Gi
+
+---
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: vend-collector
+  labels:
+    name: vend-collector
+
+---
+
+# vend-collector: was DaemonSet, now StatefulSet with anti-affinity for one-per-node
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  namespace: vend-collector
+  name: vend-collector
+  labels:
+    app: vend-collector
+spec:
+  serviceName: vend-collector
+  replicas: 2
+  selector:
+    matchLabels:
+      app: vend-collector
+  template:
+    metadata:
+      labels:
+        app: vend-collector
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: vend-collector
+              topologyKey: kubernetes.io/hostname
+      containers:
+        - name: vend-collector
+          image: saichler/vendmachine-collector:latest
+          imagePullPolicy: Always
+          env:
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+          volumeMounts:
+            - name: hdata
+              mountPath: /data
+  volumeClaimTemplates:
+    - metadata:
+        name: hdata
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: vend-local-storage
+        resources:
+          requests:
+            storage: 5Gi
+
+---
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: vend-parser
+  labels:
+    name: vend-parser
+
+---
+
+# vend-parser: was DaemonSet, now StatefulSet with anti-affinity for one-per-node
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  namespace: vend-parser
+  name: vend-parser
+  labels:
+    app: vend-parser
+spec:
+  serviceName: vend-parser
+  replicas: 2
+  selector:
+    matchLabels:
+      app: vend-parser
+  template:
+    metadata:
+      labels:
+        app: vend-parser
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: vend-parser
+              topologyKey: kubernetes.io/hostname
+      containers:
+        - name: vend-parser
+          image: saichler/vendmachine-parser:latest
+          imagePullPolicy: Always
+          env:
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+          volumeMounts:
+            - name: hdata
+              mountPath: /data
+  volumeClaimTemplates:
+    - metadata:
+        name: hdata
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: vend-local-storage
+        resources:
+          requests:
+            storage: 5Gi
+
+---
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: vend-log-agent
+  labels:
+    name: vend-log-agent
+
+---
+
+# vend-log-agent: was DaemonSet, now StatefulSet with anti-affinity for one-per-node
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  namespace: vend-log-agent
+  name: vend-log-agent
+  labels:
+    app: vend-log-agent
+spec:
+  serviceName: vend-log-agent
+  replicas: 2
+  selector:
+    matchLabels:
+      app: vend-log-agent
+  template:
+    metadata:
+      labels:
+        app: vend-log-agent
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: vend-log-agent
+              topologyKey: kubernetes.io/hostname
+      containers:
+        - name: vend-log-agent
+          image: saichler/vend-log-agent:latest
+          imagePullPolicy: Always
+          env:
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+          volumeMounts:
+            - name: hdata
+              mountPath: /data
+  volumeClaimTemplates:
+    - metadata:
+        name: hdata
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: vend-local-storage
+        resources:
+          requests:
+            storage: 5Gi

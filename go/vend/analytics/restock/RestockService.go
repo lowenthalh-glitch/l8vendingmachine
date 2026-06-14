@@ -19,6 +19,6 @@ const (
 func Activate(creds, dbname string, vnic ifs.IVNic) {
 	common.ActivateService(common.ServiceConfig{
 		ServiceName: ServiceName, ServiceArea: ServiceArea,
-		PrimaryKey: "RecommendationId",
+		PrimaryKey: "RecommendationId", Callback: newRestockServiceCallback(vnic),
 	}, &vend.VendRestockRecommendation{}, &vend.VendRestockRecommendationList{}, creds, dbname, vnic)
 }

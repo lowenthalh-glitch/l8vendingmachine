@@ -20,6 +20,6 @@ const (
 func Activate(creds, dbname string, vnic ifs.IVNic) {
 	common.ActivateService(common.ServiceConfig{
 		ServiceName: ServiceName, ServiceArea: ServiceArea,
-		PrimaryKey: "SnapshotId",
+		PrimaryKey: "SnapshotId", Callback: newSnapshotServiceCallback(vnic),
 	}, &vend.VendInventorySnapshot{}, &vend.VendInventorySnapshotList{}, creds, dbname, vnic)
 }
