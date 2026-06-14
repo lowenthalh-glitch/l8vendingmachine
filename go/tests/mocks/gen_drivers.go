@@ -68,6 +68,15 @@ func generateDrivers(store *MockDataStore) []*vend.VendDriver {
 			}
 		}
 
+		// Driver skills — all have basic, some have specializations
+		skills := []string{"restocking", "cash-handling"}
+		if i == 0 || i == 2 {
+			skills = append(skills, "refrigeration")
+		}
+		if i == 1 || i == 4 {
+			skills = append(skills, "ev-charger")
+		}
+
 		items[i] = &vend.VendDriver{
 			DriverId:      genID("drv", i),
 			FirstName:     fn,
@@ -77,6 +86,7 @@ func generateDrivers(store *MockDataStore) []*vend.VendDriver {
 			LicenseNumber: fmt.Sprintf("TX-%s%s-%04d", fn[:1], ln[:1], 1000+i),
 			LicenseClass:  lc,
 			TruckId:       truckId,
+			Skills:        skills,
 			IsActive:      true,
 			HireDate:      hireDate,
 			HomeAddress: &l8common.Address{

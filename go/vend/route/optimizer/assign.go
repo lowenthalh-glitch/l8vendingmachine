@@ -119,8 +119,15 @@ func assignMachines(machines []MachineDemand, driverRoutes []DriverRoute, config
 				continue
 			}
 			for di, dr := range driverRoutes {
+				if !driverHasSkills(dr.Driver, m.RequiredSkills) {
+					continue
+				}
+				svcMin := m.ServiceMinutes
+				if svcMin <= 0 {
+					svcMin = config.ServiceMinutes
+				}
 				estDuration := estimateRouteDuration(dr.Machines, config)
-				if estDuration+int64(config.ServiceMinutes)*60 > dr.ShiftDurationSecs {
+				if estDuration+int64(svcMin)*60 > dr.ShiftDurationSecs {
 					continue
 				}
 				startDist, _ := router.Distance(m.Lat, m.Lng, dr.StartLat, dr.StartLng)
@@ -250,6 +257,22 @@ func resolveStartLocation(driver *vend.VendDriver, sched *vend.VendDriverSchedul
 		return driver.CurrentLatitude, driver.CurrentLongitude
 	}
 	return 0, 0
+}
+
+func driverHasSkills(driver *vend.VendDriver, required []string) bool {
+	if len(required) == 0 {
+		return true
+	}
+	driverSkills := make(map[string]bool)
+	for _, s := range driver.Skills {
+		driverSkills[s] = true
+	}
+	for _, r := range required {
+		if !driverSkills[r] {
+			return false
+		}
+	}
+	return true
 }
 
 func licenseRequired(truckType vend.VendTruckType) vend.VendLicenseClass {

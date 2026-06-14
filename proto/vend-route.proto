@@ -89,6 +89,9 @@ message VendDriver {
     double current_longitude = 17;
     int64 last_location_update = 18;
 
+    // Skills and certifications
+    repeated string skills = 19;         // e.g., "refrigeration", "cash-handling", "ev-charger"
+
     // Weekly schedule
     repeated VendDriverScheduleDay schedule = 15;
 

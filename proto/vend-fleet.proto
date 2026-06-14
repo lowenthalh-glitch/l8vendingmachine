@@ -99,6 +99,9 @@ message VendFleetMachine {
   int32 low_stock_slots = 33;
   string inventory_last_updated = 34;
 
+  int32 estimated_service_minutes = 35; // time to restock this machine (default 20)
+  repeated string required_skills = 36; // driver skills needed (e.g., "refrigeration", "cash-handling")
+
   l8common.AuditInfo audit_info = 40;
 }
 

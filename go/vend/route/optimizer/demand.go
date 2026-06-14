@@ -19,11 +19,13 @@ const (
 
 // MachineDemand represents a machine that needs restocking.
 type MachineDemand struct {
-	MachineId string
-	Lat       float64
-	Lng       float64
-	Products  map[string]int32 // sku → quantity needed to fill
-	Urgency   string           // "high" (List A) or "low" (List B)
+	MachineId      string
+	Lat            float64
+	Lng            float64
+	Products       map[string]int32 // sku → quantity needed to fill
+	Urgency        string           // "high" (List A) or "low" (List B)
+	ServiceMinutes int32            // per-machine service time (0 = use default)
+	RequiredSkills []string         // skills needed to service this machine
 }
 
 // BuildDemandLists reads fleet machines and classifies them into
@@ -108,9 +110,11 @@ func buildMachineDemand(fm *vend.VendFleetMachine) *MachineDemand {
 		return nil
 	}
 	return &MachineDemand{
-		MachineId: fm.MachineId,
-		Lat:       fm.LocationLat,
-		Lng:       fm.LocationLng,
-		Products:  products,
+		MachineId:      fm.MachineId,
+		Lat:            fm.LocationLat,
+		Lng:            fm.LocationLng,
+		Products:       products,
+		ServiceMinutes: fm.EstimatedServiceMinutes,
+		RequiredSkills: fm.RequiredSkills,
 	}
 }
