@@ -143,9 +143,13 @@ func buildTruckStockMap(truck *vend.VendDeliveryTruck) map[string]int32 {
 func insertFacilityReloads(machines []MachineDemand, truckStock map[string]int32,
 	facilities []*vend.VendStockingFacility, config *RouteConfig) []RouteStop {
 
-	// Phase 1: Walk through machines in order. Serve all that current stock allows.
-	// Accumulate the ones we can't serve into a "deferred" list.
-	var served []RouteStop
+	// Walk through machines in 2-opt order. When we can't serve one:
+	// - If the machine is NEAR our current position (< nearbyThreshold), reload now
+	//   and serve it — don't drive away and come back later.
+	// - If it's far, defer it for later.
+	const nearbyThresholdMiles = 5.0
+
+	var stops []RouteStop
 	var deferred []MachineDemand
 	curLat, curLng := 0.0, 0.0
 	if len(machines) > 0 {
@@ -155,27 +159,41 @@ func insertFacilityReloads(machines []MachineDemand, truckStock map[string]int32
 	for _, m := range machines {
 		if hasStock(truckStock, m.Products) {
 			deductStock(truckStock, m.Products)
-			served = append(served, RouteStop{
+			stops = append(stops, RouteStop{
 				MachineId: m.MachineId, Lat: m.Lat, Lng: m.Lng,
 				Urgency: m.Urgency, Products: m.Products,
 			})
 			curLat, curLng = m.Lat, m.Lng
 		} else {
+			// Check if this machine is nearby — if so, reload now instead of deferring
+			dist := Haversine(curLat, curLng, m.Lat, m.Lng)
+			if dist <= nearbyThresholdMiles {
+				fac := findOptimalFacility(curLat, curLng, []MachineDemand{m}, facilities)
+				if fac != nil {
+					stops = append(stops, RouteStop{
+						FacilityId: fac.FacilityId,
+						Lat: fac.Coordinates.Latitude, Lng: fac.Coordinates.Longitude,
+						Urgency: "reload", IsReload: true,
+					})
+					reloadTruckFromFacility(truckStock, fac)
+					curLat, curLng = fac.Coordinates.Latitude, fac.Coordinates.Longitude
+					// Now serve the machine
+					deductStock(truckStock, m.Products)
+					stops = append(stops, RouteStop{
+						MachineId: m.MachineId, Lat: m.Lat, Lng: m.Lng,
+						Urgency: m.Urgency, Products: m.Products,
+					})
+					curLat, curLng = m.Lat, m.Lng
+					continue
+				}
+			}
 			deferred = append(deferred, m)
 		}
 	}
 
 	if len(deferred) == 0 {
-		return served // No reload needed — truck had enough stock
+		return stops
 	}
-
-	// Phase 2: Need to reload. Find the optimal facility that minimizes total detour.
-	// The reload goes between the last served stop and the first deferred stop.
-	// Evaluate each facility: cost = (lastServed → facility) + (facility → firstDeferred)
-	// vs direct (lastServed → firstDeferred).
-	// Pick the facility with the minimum added cost.
-	var stops []RouteStop
-	stops = append(stops, served...)
 
 	for len(deferred) > 0 {
 		// Find optimal facility for reload
