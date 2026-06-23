@@ -122,7 +122,7 @@ func GenerateRoutes(nic ifs.IVNic, req *vend.VendRouteOptRequest) ([]*vend.VendR
 
 			ApplyTrafficToLegs(built.Legs, dayStartTime, config.ServiceMinutes, config.ReloadMinutes)
 			built.Metrics = ComputeRouteMetrics(built.Legs, dayStartTime, built.TruckMPG,
-				config.FuelPriceGal, config.ServiceMinutes, config.ReloadMinutes)
+				config.FuelPriceGal, config.ServiceMinutes, config.ReloadMinutes, config.BreakDurationMinutes)
 
 			RefineWithTraffic(built, dayStartTime, config, nic)
 

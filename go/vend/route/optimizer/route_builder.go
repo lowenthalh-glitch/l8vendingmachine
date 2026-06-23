@@ -70,7 +70,7 @@ func BuildRouteForDriver(dr *DriverRoute,
 	legs := buildLegsWithRouter(dr.StartLat, dr.StartLng, stops, router)
 	mpg := dr.Truck.MilesPerGallon
 	metrics := ComputeRouteMetrics(legs, 0, mpg, config.FuelPriceGal,
-		config.ServiceMinutes, config.ReloadMinutes)
+		config.ServiceMinutes, config.ReloadMinutes, config.BreakDurationMinutes)
 
 	return &BuiltRoute{Stops: stops, Legs: legs, Metrics: metrics, TruckMPG: mpg}
 }
@@ -344,7 +344,14 @@ func buildLegsWithRouter(startLat, startLng float64, stops []RouteStop, router *
 	legs := make([]RouteLeg, len(stops))
 	curLat, curLng := startLat, startLng
 	for i, s := range stops {
-		legs[i] = router.Leg(curLat, curLng, s.Lat, s.Lng, s.IsReload)
+		dist, dur := router.Distance(curLat, curLng, s.Lat, s.Lng)
+		legs[i] = RouteLeg{
+			DistanceMiles:   dist,
+			DurationSeconds: dur,
+			IsReload:        s.IsReload,
+			IsBreak:         s.IsBreak,
+			IsEnd:           s.IsEnd,
+		}
 		curLat, curLng = s.Lat, s.Lng
 	}
 	return legs

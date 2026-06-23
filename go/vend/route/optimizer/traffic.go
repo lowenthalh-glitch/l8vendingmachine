@@ -122,7 +122,7 @@ func RefineWithTraffic(route *BuiltRoute, startTime int64, config *RouteConfig, 
 	// Recalculate metrics using the same ComputeRouteMetrics
 	route.Legs = newLegs
 	route.Metrics = ComputeRouteMetrics(newLegs, startTime, route.TruckMPG,
-		config.FuelPriceGal, config.ServiceMinutes, config.ReloadMinutes)
+		config.FuelPriceGal, config.ServiceMinutes, config.ReloadMinutes, config.BreakDurationMinutes)
 
 	return nil
 }

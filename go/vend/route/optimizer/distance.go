@@ -17,6 +17,8 @@ type RouteLeg struct {
 	DistanceMiles   float64
 	DurationSeconds int64
 	IsReload        bool
+	IsBreak         bool
+	IsEnd           bool
 }
 
 // RouteMetrics holds computed totals for a route.
@@ -55,7 +57,8 @@ func Centroid(points [][2]float64) (float64, float64) {
 // ComputeRouteMetrics calculates totals from a list of legs.
 // Used by both haversine and Google Maps paths — single implementation.
 func ComputeRouteMetrics(legs []RouteLeg, startTime int64, mpg float64,
-	fuelPrice float64, serviceMinutes int32, reloadMinutes int32) RouteMetrics {
+	fuelPrice float64, serviceMinutes int32, reloadMinutes int32,
+	breakDurationMinutes int32) RouteMetrics {
 
 	m := RouteMetrics{}
 	currentTime := startTime
@@ -66,10 +69,15 @@ func ComputeRouteMetrics(legs []RouteLeg, startTime int64, mpg float64,
 		m.PlannedArrivals[i] = currentTime
 		m.TotalDistanceMiles += leg.DistanceMiles
 
-		// Add service or reload time after arriving
-		if leg.IsReload {
+		// Add time at stop based on type
+		if leg.IsEnd {
+			// No service time at end-of-day location
+		} else if leg.IsBreak {
+			currentTime += int64(breakDurationMinutes) * 60
+		} else if leg.IsReload {
 			currentTime += int64(reloadMinutes) * 60
 		} else {
+			// Machine stop — service time to restock
 			currentTime += int64(serviceMinutes) * 60
 		}
 	}
