@@ -109,6 +109,29 @@ func AssignMachinesToDrivers(listA, listB []MachineDemand,
 func assignMachines(machines []MachineDemand, driverRoutes []DriverRoute, config *RouteConfig, router *Router) {
 	assigned := make([]bool, len(machines))
 
+	// Pre-compute distance matrix: all machines + all driver start/end points
+	// Layout: [machine0..machineN, driver0_start, driver0_end, driver1_start, ...]
+	nMachines := len(machines)
+	nDrivers := len(driverRoutes)
+	nPoints := nMachines + nDrivers*2
+	points := make([][2]float64, nPoints)
+	for i, m := range machines {
+		points[i] = [2]float64{m.Lat, m.Lng}
+	}
+	for i, dr := range driverRoutes {
+		points[nMachines+i*2] = [2]float64{dr.StartLat, dr.StartLng}
+		points[nMachines+i*2+1] = [2]float64{dr.EndLat, dr.EndLng}
+	}
+	distMatrix, _ := router.Matrix(points)
+
+	// Helper to get distance from pre-computed matrix
+	getDist := func(i, j int) float64 {
+		if distMatrix != nil && i < len(distMatrix) && j < len(distMatrix[i]) {
+			return distMatrix[i][j]
+		}
+		return Haversine(points[i][0], points[i][1], points[j][0], points[j][1])
+	}
+
 	for {
 		bestMachine := -1
 		bestDriver := -1
@@ -130,8 +153,8 @@ func assignMachines(machines []MachineDemand, driverRoutes []DriverRoute, config
 				if estDuration+int64(svcMin)*60 > dr.ShiftDurationSecs {
 					continue
 				}
-				startDist, _ := router.Distance(m.Lat, m.Lng, dr.StartLat, dr.StartLng)
-				endDist, _ := router.Distance(m.Lat, m.Lng, dr.EndLat, dr.EndLng)
+				startDist := getDist(mi, nMachines+di*2)
+				endDist := getDist(mi, nMachines+di*2+1)
 				score := 0.6*startDist + 0.4*endDist
 				// Priority weighting: urgent machines get a 20% distance bonus
 				if m.Urgency == "high" {
