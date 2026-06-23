@@ -46,6 +46,33 @@
         });
     }
 
+    function getOSRMUrl() {
+        try {
+            var cfg = Layer8DConfig.getConfig();
+            return (cfg && cfg.app && cfg.app.osrmUrl) || 'http://localhost:5000';
+        } catch(e) { return 'http://localhost:5000'; }
+    }
+
+    // Fetch actual road geometry from OSRM for a list of waypoints.
+    // Calls back with an array of [lat,lng] points for the full road path, or null on failure.
+    function fetchOSRMRoute(waypoints, callback) {
+        var coords = waypoints.map(function(p) { return p[1] + ',' + p[0]; }).join(';');
+        var url = getOSRMUrl() + '/route/v1/driving/' + coords + '?overview=full&geometries=geojson';
+        fetch(url)
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.code === 'Ok' && data.routes && data.routes[0] && data.routes[0].geometry) {
+                    var geojsonCoords = data.routes[0].geometry.coordinates;
+                    // GeoJSON is [lng,lat], Leaflet needs [lat,lng]
+                    var path = geojsonCoords.map(function(c) { return [c[1], c[0]]; });
+                    callback(path);
+                } else {
+                    callback(null);
+                }
+            })
+            .catch(function() { callback(null); });
+    }
+
     function esc(s) { if (!s) return ''; var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
     function addrLine(a) { if (!a) return ''; return [a.line1,a.city,a.stateProvince,a.postalCode].filter(Boolean).join(', '); }
     function licClass(v) { return {0:'—',1:'Class C',2:'Class B',3:'Class A'}[v] || String(v); }
@@ -182,11 +209,21 @@
                         '<br>Urgency: '+esc(stop.serviceUrgency||''));
             });
             if (points.length >= 2) {
-                L.polyline(points, { color: color, weight: 3, opacity: 0.7, dashArray: '8,4' }).addTo(lg)
-                    .bindPopup('<b>'+esc(route.name)+'</b><br>Distance: '+
-                        (route.totalDistance ? route.totalDistance.toFixed(1)+' mi' : '-')+
-                        '<br>Duration: '+(route.totalDuration||0)+' min'+
-                        '<br>Fuel: $'+(route.estimatedFuelCost ? route.estimatedFuelCost.toFixed(2) : '-'));
+                var popupText = '<b>'+esc(route.name)+'</b><br>Distance: '+
+                    (route.totalDistance ? route.totalDistance.toFixed(1)+' mi' : '-')+
+                    '<br>Duration: '+(route.totalDuration||0)+' min'+
+                    '<br>Fuel: $'+(route.estimatedFuelCost ? route.estimatedFuelCost.toFixed(2) : '-');
+                // Try OSRM for actual road geometry
+                fetchOSRMRoute(points, function(roadPath) {
+                    if (roadPath) {
+                        L.polyline(roadPath, { color: color, weight: 4, opacity: 0.8 }).addTo(lg)
+                            .bindPopup(popupText);
+                    } else {
+                        // Fallback to straight lines
+                        L.polyline(points, { color: color, weight: 3, opacity: 0.7, dashArray: '8,4' }).addTo(lg)
+                            .bindPopup(popupText);
+                    }
+                });
             }
         });
         return lg;
