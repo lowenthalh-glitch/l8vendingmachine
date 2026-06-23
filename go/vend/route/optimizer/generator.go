@@ -116,13 +116,29 @@ func GenerateRoutes(nic ifs.IVNic, req *vend.VendRouteOptRequest) ([]*vend.VendR
 
 		BalanceWorkload(driverRoutes, req.BalanceMode, config)
 
-		for _, dr := range driverRoutes {
-			routeSeq++
-			built := BuildRouteForDriver(&dr, allFacilities, config, router)
+		// Build all routes for this day
+		builtRoutes := make([]*BuiltRoute, len(driverRoutes))
+		for i := range driverRoutes {
+			builtRoutes[i] = BuildRouteForDriver(&driverRoutes[i], allFacilities, config, router)
+			ApplyTrafficToLegs(builtRoutes[i].Legs, dayStartTime, config.ServiceMinutes, config.ReloadMinutes)
+			builtRoutes[i].Metrics = ComputeRouteMetrics(builtRoutes[i].Legs, dayStartTime,
+				builtRoutes[i].TruckMPG, config.FuelPriceGal, config.ServiceMinutes,
+				config.ReloadMinutes, config.BreakDurationMinutes)
+		}
 
-			ApplyTrafficToLegs(built.Legs, dayStartTime, config.ServiceMinutes, config.ReloadMinutes)
-			built.Metrics = ComputeRouteMetrics(built.Legs, dayStartTime, built.TruckMPG,
-				config.FuelPriceGal, config.ServiceMinutes, config.ReloadMinutes, config.BreakDurationMinutes)
+		// Enforce shift limits — move overflow to other drivers or defer to next day
+		deferredMachines := EnforceShiftLimits(driverRoutes, builtRoutes, allFacilities, config, router)
+		for _, dm := range deferredMachines {
+			delete(servedMachines, dm.MachineId) // unmark so next day picks them up
+		}
+
+		// Post all routes that have machines
+		for i, dr := range driverRoutes {
+			if len(dr.Machines) == 0 {
+				continue
+			}
+			routeSeq++
+			built := builtRoutes[i]
 
 			RefineWithTraffic(built, dayStartTime, config, nic)
 
@@ -133,7 +149,6 @@ func GenerateRoutes(nic ifs.IVNic, req *vend.VendRouteOptRequest) ([]*vend.VendR
 			generatedRoutes = append(generatedRoutes, route)
 			req.GeneratedRouteIds = append(req.GeneratedRouteIds, route.RouteId)
 
-			// Mark machines as served so they're excluded from next day
 			for _, m := range dr.Machines {
 				servedMachines[m.MachineId] = true
 				if m.Urgency == "low" {
