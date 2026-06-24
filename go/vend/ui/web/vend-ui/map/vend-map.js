@@ -73,6 +73,22 @@
             .catch(function() { callback(null); });
     }
 
+    // Build a set of machine/facility/driver IDs on a single route's stops
+    function buildHighlightSet(routes, routeId) {
+        var set = { machines: {}, facilities: {}, driverId: '', truckId: '' };
+        for (var i = 0; i < routes.length; i++) {
+            if (routes[i].routeId !== routeId) continue;
+            set.driverId = routes[i].driverId || '';
+            set.truckId = routes[i].vehicleId || '';
+            (routes[i].stops || []).forEach(function(s) {
+                if (s.machineId) set.machines[s.machineId] = true;
+                if (s.facilityId) set.facilities[s.facilityId] = true;
+            });
+            break;
+        }
+        return set;
+    }
+
     function esc(s) { if (!s) return ''; var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
     function addrLine(a) { if (!a) return ''; return [a.line1,a.city,a.stateProvince,a.postalCode].filter(Boolean).join(', '); }
     function licClass(v) { return {0:'—',1:'Class C',2:'Class B',3:'Class A'}[v] || String(v); }
@@ -84,7 +100,7 @@
 
     // --- Render functions ---
 
-    function renderFacilities(items, search) {
+    function renderFacilities(items, search, highlight) {
         var lg = L.layerGroup();
         items.forEach(function(f) {
             if (!f.coordinates) return;
@@ -92,7 +108,10 @@
             if (!lat && !lng) return;
             facCoords[f.facilityId] = [lat, lng];
             if (search && !matchSearch(f.name, search)) return;
-            L.marker([lat, lng], { icon: colorIcon('#e74c3c') }).addTo(lg)
+            var onRoute = !highlight || (highlight.facilities[f.facilityId]);
+            var size = onRoute ? 18 : 12;
+            var opacity = onRoute ? 1.0 : 0.3;
+            var marker = L.marker([lat, lng], { icon: colorIcon('#e74c3c', size), opacity: opacity }).addTo(lg)
                 .bindPopup('<b>'+esc(f.name)+'</b> ('+esc(f.code)+')<br>'+esc(addrLine(f.address))+
                     '<br>Storage: '+(f.totalStorageSqFt||0)+' sq ft | Docks: '+(f.loadingDocks||0));
         });
@@ -112,16 +131,17 @@
         return lg;
     }
 
-    function renderMachines(items, statusFilter, search) {
+    function renderMachines(items, statusFilter, search, highlight) {
         var lg = L.layerGroup();
         items.forEach(function(entry) {
             if (!entry.machines) return;
             for (var key in entry.machines) {
                 if (!entry.machines.hasOwnProperty(key)) continue;
                 var m = entry.machines[key];
+                var mid = m.machineId || key;
                 var lat = num(m.locationLat), lng = num(m.locationLng);
                 if (!lat && !lng) continue;
-                machineCoords[m.machineId || key] = [lat, lng];
+                machineCoords[mid] = [lat, lng];
                 if (statusFilter === 'needs-restock') {
                     var hasEmpty = false;
                     var slots = m.slots || [];
@@ -132,17 +152,20 @@
                     }
                     if (!hasEmpty && m.status !== 'warning') continue;
                 } else if (statusFilter && m.status !== statusFilter) continue;
-                if (search && !matchSearch(m.name || m.machineId || key, search)) continue;
-                var color = (m.status === 'offline') ? '#95a5a6' : '#9b59b6';
-                L.marker([lat, lng], { icon: colorIcon(color, 10) }).addTo(lg)
-                    .bindPopup('<b>'+esc(m.name||m.machineId)+'</b><br>Type: '+esc(m.type||'')+
+                if (search && !matchSearch(m.name || mid, search)) continue;
+                var onRoute = !highlight || highlight.machines[mid];
+                var baseColor = (m.status === 'offline') ? '#95a5a6' : '#9b59b6';
+                var size = onRoute ? 16 : 8;
+                var opacity = onRoute ? 1.0 : 0.25;
+                L.marker([lat, lng], { icon: colorIcon(baseColor, size), opacity: opacity }).addTo(lg)
+                    .bindPopup('<b>'+esc(m.name||mid)+'</b><br>Type: '+esc(m.type||'')+
                         '<br>Status: '+esc(m.status||'')+'<br>'+esc(m.locationCity||''));
             }
         });
         return lg;
     }
 
-    function renderTrucks(items, statusFilter, search) {
+    function renderTrucks(items, statusFilter, search, highlight) {
         var lg = L.layerGroup();
         var statusMap = {0:'Unknown',1:'Active',2:'Maintenance',3:'En Route',4:'Decommissioned'};
         items.forEach(function(t) {
@@ -150,7 +173,10 @@
             if (!lat && !lng) return;
             if (statusFilter && String(t.status) !== statusFilter) return;
             if (search && !matchSearch(t.name, search)) return;
-            L.marker([lat, lng], { icon: colorIcon('#2ecc71') }).addTo(lg)
+            var onRoute = !highlight || highlight.truckId === t.truckId;
+            var size = onRoute ? 18 : 12;
+            var opacity = onRoute ? 1.0 : 0.25;
+            L.marker([lat, lng], { icon: colorIcon('#2ecc71', size), opacity: opacity }).addTo(lg)
                 .bindPopup('<b>'+esc(t.name)+'</b><br>'+esc(t.make+' '+t.model)+
                     '<br>Plate: '+esc(t.plateNumber)+'<br>Status: '+(statusMap[t.status]||t.status)+
                     '<br>MPG: '+(t.milesPerGallon ? t.milesPerGallon.toFixed(1) : '-'));
@@ -158,7 +184,7 @@
         return lg;
     }
 
-    function renderDrivers(items, search) {
+    function renderDrivers(items, search, highlight) {
         var lg = L.layerGroup();
         items.forEach(function(d) {
             var lat = num(d.currentLatitude), lng = num(d.currentLongitude);
@@ -171,7 +197,10 @@
                 var mins = Math.round((Date.now()/1000 - ts)/60);
                 ago = mins < 60 ? mins+'m ago' : Math.round(mins/60)+'h ago';
             }
-            L.marker([lat, lng], { icon: colorIcon('#f39c12') }).addTo(lg)
+            var onRoute = !highlight || highlight.driverId === d.driverId;
+            var size = onRoute ? 18 : 12;
+            var opacity = onRoute ? 1.0 : 0.25;
+            L.marker([lat, lng], { icon: colorIcon('#f39c12', size), opacity: opacity }).addTo(lg)
                 .bindPopup('<b>'+esc(name)+'</b><br>'+esc(addrLine(d.homeAddress))+
                     '<br>License: '+licClass(d.licenseClass)+(ago ? '<br>Updated: '+ago : ''));
         });
@@ -257,11 +286,17 @@
             }
         });
 
-        if (toggles.facilities) { layers.facilities = renderFacilities(rawData.facilities, search); layers.facilities.addTo(map); }
+        // Build highlight set: when exactly 1 route selected, highlight its stops
+        var highlight = null;
+        if (rf.length === 1) {
+            highlight = buildHighlightSet(rawData.routes, rf[0]);
+        }
+
+        if (toggles.facilities) { layers.facilities = renderFacilities(rawData.facilities, search, highlight); layers.facilities.addTo(map); }
         if (toggles.locations) { layers.locations = renderLocations(rawData.locations, search); layers.locations.addTo(map); }
-        if (toggles.machines) { layers.machines = renderMachines(rawData.machines, mf, search); layers.machines.addTo(map); }
-        if (toggles.trucks) { layers.trucks = renderTrucks(rawData.trucks, tf, search); layers.trucks.addTo(map); }
-        if (toggles.drivers) { layers.drivers = renderDrivers(rawData.drivers, search); layers.drivers.addTo(map); }
+        if (toggles.machines) { layers.machines = renderMachines(rawData.machines, mf, search, highlight); layers.machines.addTo(map); }
+        if (toggles.trucks) { layers.trucks = renderTrucks(rawData.trucks, tf, search, highlight); layers.trucks.addTo(map); }
+        if (toggles.drivers) { layers.drivers = renderDrivers(rawData.drivers, search, highlight); layers.drivers.addTo(map); }
         if (toggles.routes) { layers.routes = renderRoutes(rawData.routes, rf, search); layers.routes.addTo(map); }
     }
 
