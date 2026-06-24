@@ -208,7 +208,14 @@ func toVendRouteFromDriver(built *BuiltRoute, dr *DriverRoute,
 	plannedDate int64, seq int) *vend.VendRoute {
 
 	t := time.Unix(plannedDate, 0)
-	name := fmt.Sprintf("Route %s-%02d", t.Format("2006-01-02"), seq)
+	driverName := ""
+	if dr.Driver != nil {
+		driverName = dr.Driver.FirstName
+		if dr.Driver.LastName != "" {
+			driverName += " " + dr.Driver.LastName
+		}
+	}
+	name := fmt.Sprintf("%s — %s", t.Format("Jan 2"), driverName)
 
 	// Determine primary facility (first reload, or nearest to start)
 	facilityId := ""
