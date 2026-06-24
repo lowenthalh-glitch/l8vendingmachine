@@ -230,10 +230,20 @@
                 }
                 if (!coords) return;
                 points.push(coords);
-                var mc = stop.serviceUrgency==='high' ? '#e74c3c' : stop.serviceUrgency==='reload' ? '#3498db' : '#f1c40f';
-                var label = stop.stopType==='reload' ? ' (Reload)' : ': '+esc(stop.machineName || stop.machineId);
-                L.marker(coords, { icon: colorIcon(mc, 10) }).addTo(lg)
-                    .bindPopup('<b>'+esc(route.name)+'</b><br>Stop #'+stop.stopOrder+ label +
+                var mc = stop.serviceUrgency==='high' ? '#e74c3c' : stop.serviceUrgency==='reload' ? '#3498db' :
+                    stop.serviceUrgency==='break' ? '#95a5a6' : '#f1c40f';
+                var stopLabel = stop.stopType==='reload' ? 'R' : stop.stopType==='break' ? 'B' : String(stop.stopOrder);
+                var numberedIcon = L.divIcon({
+                    className: '',
+                    html: '<div style="width:22px;height:22px;background:'+color+';border:2px solid #fff;border-radius:50%;' +
+                          'box-shadow:0 1px 4px rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;' +
+                          'font-size:10px;font-weight:bold;color:#fff;">' + stopLabel + '</div>',
+                    iconSize: [22, 22], iconAnchor: [11, 11], popupAnchor: [0, -14]
+                });
+                var popupLabel = stop.stopType==='reload' ? ' (Reload)' : stop.stopType==='break' ? ' (Break)' :
+                    ': '+esc(stop.machineName || stop.machineId);
+                L.marker(coords, { icon: numberedIcon }).addTo(lg)
+                    .bindPopup('<b>'+esc(route.name)+'</b><br>Stop #'+stop.stopOrder+ popupLabel +
                         '<br>'+esc(stop.locationAddress||'')+' '+esc(stop.locationCity||'')+
                         '<br>Urgency: '+esc(stop.serviceUrgency||''));
             });
